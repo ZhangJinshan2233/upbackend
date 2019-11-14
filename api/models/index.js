@@ -15,12 +15,13 @@ const Challenge = require('./challenge');
 const ChatRoom = require('./chatRoom');
 const Message = require('./message')
 const FoodJournalPost = require('./foodJournalPost');
-const UnreadNotification=require('./unreadNotification');
-const MembershipCategory=require('./membershipCategory');
-const Membership=require('./membership');
-const HealthyTip=require('./healthyTip')
+const UnreadNotification = require('./unreadNotification');
+const MembershipCategory = require('./membershipCategory');
+const Membership = require('./membership');
+const HealthyTip = require('./healthyTip')
 //fix deprecation warnings
 mongoose.set('useFindAndModify', false);
+mongoose.set("useUnifiedTopology", true);
 mongoose.connect(config.dbUrl, {
     socketTimeoutMS: 3000000,
     keepAlive: 3000000,
