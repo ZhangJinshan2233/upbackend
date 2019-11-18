@@ -9,9 +9,6 @@ const coacheeController = require('./coacheeController');
 const habitCategoryController = require('./habitCategoryController');
 
 const habitController = require('./habitController');
-
-const timelinePostController = require('./timelinePostController');
-
 const habitlistRecordController = require('./habitlistRecordController');
 const indicatorController = require('./indicatorController');
 const indicatorRecordController = require('./indicatorRecordController');
@@ -29,7 +26,6 @@ module.exports = {
     coacheeController,
     habitCategoryController,
     habitController,
-    timelinePostController,
     habitlistRecordController,
     indicatorController,
     indicatorRecordController,

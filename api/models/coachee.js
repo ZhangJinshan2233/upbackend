@@ -32,10 +32,6 @@ const coacheeSchema = new Schema({
         type: String,
         required: true
     },
-    // userType: {
-    //     type: String,
-    //     default: "freeCoachee"
-    // },
      userType: {
         type: String,
         default: "Coachee"
