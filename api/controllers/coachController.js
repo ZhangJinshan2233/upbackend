@@ -82,11 +82,15 @@ let get_coachees_pagination = async (req, res) => {
         _id
     } = req.user;
     let skipNum = parseInt(req.query.skipNum) || 0;
-    let recordSize = 5;
+    let recordSize = 4;
     let coachees = []
+    let _indicator = null
+    let _indicatorPromise = Indicator.findOne({
+        name: "weight"
+    }).select('_id')
 
     let daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    coachees = await Coachee.find({
+    coacheesPromise = Coachee.find({
             _coach: _id
         })
         .sort({
@@ -95,6 +99,8 @@ let get_coachees_pagination = async (req, res) => {
         .skip(skipNum)
         .limit(recordSize)
     let convertedCoachees = []
+    [_indicator, coachees] = await Promise.all([_indicatorPromise, coacheesPromise]);
+
     if (coachees.length > 0) {
         for (let coachee of coachees) {
             let unreadMessages = [];
@@ -105,8 +111,11 @@ let get_coachees_pagination = async (req, res) => {
             let unreadPostEarliestDate = new Date();
             let changedWeight = 0;
             let remainingDaysOfMembership = 0
+            let latestWeightRecord = 0
+            let memberRecord = null
             //get unreadNotifications
-            unreadMessages = await UnreadNotification.find({
+
+            let unreadMessagesPromise = UnreadNotification.find({
                 $and: [{
                     type: "message"
                 }, {
@@ -117,11 +126,7 @@ let get_coachees_pagination = async (req, res) => {
             }).sort({
                 createdAt: -1
             })
-            if (unreadMessages.length > 0) {
-                unreadMessageItems = unreadMessages.length;
-                unreadMessageEarliestDate = unreadMessages[0].createdAt
-            }
-            unreadPosts = await UnreadNotification.find({
+            let unreadPostsPromise = UnreadNotification.find({
                 $and: [{
                     type: "post"
                 }, {
@@ -132,18 +137,8 @@ let get_coachees_pagination = async (req, res) => {
             }).sort({
                 createdAt: -1
             })
-            if (unreadPosts.length > 0) {
-                unreadPostItems = unreadPosts.length;
-                unreadPostEarliestDate = unreadPosts[0].createdAt
-            }
 
-            //get latest weight record;
-
-            let _indicator = await Indicator.findOne({
-                name: "weight"
-            }).select('_id')
-
-            let latestWeightRecord = await IndicatorRecord.findOne({
+            let latestWeightRecordPromise = IndicatorRecord.findOne({
                     $and: [{
                             _coachee: coachee._id
                         },
@@ -158,18 +153,28 @@ let get_coachees_pagination = async (req, res) => {
                 .sort({
                     createDate: -1
                 })
+
+            let memberRecordPromise = MemberRecord.findOne({
+                _coachee: Types.ObjectId(coachee._id)
+            })
+
+            [unreadMessages, unreadPosts, latestWeightRecord, memberRecord] = await Promise.all([unreadMessagesPromise, unreadPostsPromise, latestWeightRecordPromise, memberRecordPromise]);
+            if (unreadMessages.length > 0) {
+                unreadMessageItems = unreadMessages.length;
+                unreadMessageEarliestDate = unreadMessages[0].createdAt
+            }
+
+            if (unreadPosts.length > 0) {
+                unreadPostItems = unreadPosts.length;
+                unreadPostEarliestDate = unreadPosts[0].createdAt
+            }
+
             if (latestWeightRecord) {
                 changedWeight = latestWeightRecord.value - coachee.weight
             }
 
-            //get is member or not 
-            let memberRecord = null
-            memberRecord = await MemberRecord.findOne({
-                _coachee: Types.ObjectId(coachee._id)
-            })
-            // if coachee is a member
-
             let averageCompletedPercent = 0;
+
             if (memberRecord) { //judge coachee is member or not 
                 let totalCompletedPercent = 0;
                 //get habits of each day of week
@@ -183,10 +188,10 @@ let get_coachees_pagination = async (req, res) => {
                     startOfDay
                 } = convert_time_to_localtime(format(subDays(new Date(), 7), 'MM/dd/yyyy'))
 
-                let weekHabitlist = await get_week_habitlist(coachee._id)
+                let weekHabitlistPromise = get_week_habitlist(coachee._id)
 
                 //get habit records of last seven days
-                habitsOfLastSevenDays = await HabitlistRecord.find({
+                let habitsOfLastSevenDaysPromise = HabitlistRecord.find({
                     $and: [{
                             _coachee: coachee._id
                         },
@@ -201,6 +206,8 @@ let get_coachees_pagination = async (req, res) => {
                         }
                     ]
                 });
+                let [weekHabitlist, habitsOfLastSevenDays] = await Promise.all([weekHabitlistPromise, habitsOfLastSevenDaysPromise])
+
                 //get days of member
                 let differenceDays = differenceInCalendarDays(new Date(), memberRecord.createdAt)
                 // judge days of member less than 7
@@ -308,6 +315,7 @@ let get_coachees_pagination = async (req, res) => {
 
         }
     }
+
     res.status(200).json({
         coachees: convertedCoachees
     })

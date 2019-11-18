@@ -185,7 +185,6 @@ let get_habitlist_record_of_current_week = async (req, res) => {
     if (habitlistRecordOfWeek.length > 0) {
         for (let j = 0; j < habitlistRecordOfWeek.length; j++) {
             let daynumber = getDay(habitlistRecordOfWeek[j].createDate);
-            console.log(daynumber)
             let day = ''
             switch (daynumber) {
                 case 0:

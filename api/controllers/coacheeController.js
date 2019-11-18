@@ -25,43 +25,48 @@ let signup = async (req, res) => {
         email,
         firstName,
     } = req.body
-    let coachee = await Coachee.findOne({
+    let coacheePromise =Coachee.findOne({
         email: email
     });
-    let coach = await Coach.findOne({
+    let coachPromise =Coach.findOne({
         email: email
     });
 
-    if (coach || coachee) throw Error('Email already existed');
-    let systyemCoach = await Coach.findOne({
+    let systyemCoachPromise =Coach.findOne({
         email: 'support@improvee.co'
     }).select('_id');
-    let newUser = await Coachee.create({
+    let [coachee,coach,systyemCoach]=await Promise.all([coacheePromise,coachPromise,systyemCoachPromise])
+    
+    if (coach || coachee) throw Error('Email already existed');
+
+
+    let newUserPromise =Coachee.create({
         _coach: systyemCoach._id,
         // membershipEndDate: addDays(Date.now(), 7),
         ...req.body
     });
 
+    let memberCategoryPromise =MembershipCategory.findOne({
+        type: "free"
+    })
+
+    let [newUser,memberCategory]=Promise.all([newUserPromise,memberCategoryPromise])
     if (!newUser) throw Error('created unsuccessfully')
-
-    let memberCategory=await MembershipCategory.findOne({
-        type:"free"
-    })
+    let newMembershipPromise=Membership.create({
+        endDate: addDays(Date.now(), memberCategory.duration),
+        _coachee: newUser._id,
+        _membershipCategory: memberCategory._id
+    });
     
-    let newMembership=await Membership.create({
-        endDate:addDays(Date.now(), memberCategory.duration),
-        _coachee:newUser._id,
-        _membershipCategory:memberCategory._id
-    })
-    if(!newMembership) throw Error('failed to register')
-
-    let memberRecord=await MemberRecord.create({
-        _coachee:newUser._id,
-        _membership:newMembership._id,
-        // expireAt:addDays(new Date(), memberCategory.duration)
-        expireAt:new Date("2019-11-16T01:40:25.618Z")
+    let memberRecordPromise =MemberRecord.create({
+        _coachee: newUser._id,
+        _membership: newMembership._id,
+        expireAt: addDays(new Date(), memberCategory.duration)
     })
 
+    let[newMembership,memberRecord]=Promise.all([newMembershipPromise,memberRecordPromise])
+    
+    if (!newMembership) throw Error('failed to register')
     let emailContent = "Welcome to the UP Health community. " +
         "You'll find no where like this where great place where" +
         " friendships meet professional coaching so that becoming" +
@@ -124,7 +129,7 @@ let insert_recommended_habits = async (req, res) => {
 
     //insert recommendHabitList into day of the week
 
-    let daysOfWeek = ['Sunday', 'Monday','Tuesday','Wednesday', 'Thursday', 'Friday', 'Saturday']
+    let daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     //habit list of day of week
     let habits = recommendHabitlist.reduce((accmulator, current) => {
         let habit = {
