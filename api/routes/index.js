@@ -18,7 +18,8 @@ const unreadNotificationRoute = require('./unreadNotificationRoute');
 const membershipCategoryRoute = require('./membershipCategoryRoute');
 const membershipRoute = require('./membershipRoute');
 const healthyTipRoute = require('./healthyTipRoute');
-const memberRecordRoute = require('./memberRecordRoute')
+const memberRecordRoute = require('./memberRecordRoute');
+const companyCodeRoute=require('./companyCodeRoute')
 module.exports = {
     authRoute,
     coachRoute,
@@ -35,5 +36,6 @@ module.exports = {
     membershipCategoryRoute,
     membershipRoute,
     healthyTipRoute,
-    memberRecordRoute
+    memberRecordRoute,
+    companyCodeRoute
 }

@@ -5,7 +5,8 @@ const {
     Habit,
     MembershipCategory,
     Membership,
-    MemberRecord
+    MemberRecord,
+    CompanyCode
 } = require('../models');
 const {
     addDays
@@ -25,48 +26,60 @@ let signup = async (req, res) => {
         email,
         firstName,
     } = req.body
-    let coacheePromise =Coachee.findOne({
+    let coacheePromise = Coachee.findOne({
         email: email
     });
-    let coachPromise =Coach.findOne({
+    let coachPromise = Coach.findOne({
         email: email
     });
+    let group = ""
+    let {
+        companyCode:code,
+        ...otherProperties
+    } = req.body;
+    if (code) {
+        let companyInfo = await CompanyCode.findOne({
+            code
+        });
+        if (!companyInfo) throw Error('company code does not exist')
+        group = companyInfo.companyName;
+    } else {
+        group = "individual"
+    }
 
-    let systyemCoachPromise =Coach.findOne({
+    let systyemCoachPromise = Coach.findOne({
         email: 'support@improvee.co'
     }).select('_id');
-    let [coachee,coach,systyemCoach]=await Promise.all([coacheePromise,coachPromise,systyemCoachPromise])
-    
+    let [coachee, coach, systyemCoach] = await Promise.all([coacheePromise, coachPromise, systyemCoachPromise])
+
     if (coach || coachee) throw Error('Email already existed');
 
-
-    let newUserPromise =Coachee.create({
+    let newUserPromise = Coachee.create({
         _coach: systyemCoach._id,
-        // membershipEndDate: addDays(Date.now(), 7),
-        ...req.body
+        group,
+        ...otherProperties
     });
 
-    let memberCategoryPromise =MembershipCategory.findOne({
+    let memberCategoryPromise = MembershipCategory.findOne({
         type: "free"
     })
-
-    let [newUser,memberCategory]=Promise.all([newUserPromise,memberCategoryPromise])
+    let [newUser, memberCategory] = await Promise.all([newUserPromise, memberCategoryPromise])
     if (!newUser) throw Error('created unsuccessfully')
-    let newMembershipPromise=Membership.create({
+    let newMembership = await Membership.create({
         endDate: addDays(Date.now(), memberCategory.duration),
         _coachee: newUser._id,
         _membershipCategory: memberCategory._id
     });
-    
-    let memberRecordPromise =MemberRecord.create({
+
+    if (!newMembership) throw Error('failed to register');
+
+    let memberRecord = await MemberRecord.create({
         _coachee: newUser._id,
         _membership: newMembership._id,
         expireAt: addDays(new Date(), memberCategory.duration)
     })
+    if (!memberRecord) throw Error('failed to register');
 
-    let[newMembership,memberRecord]=Promise.all([newMembershipPromise,memberRecordPromise])
-    
-    if (!newMembership) throw Error('failed to register')
     let emailContent = "Welcome to the UP Health community. " +
         "You'll find no where like this where great place where" +
         " friendships meet professional coaching so that becoming" +

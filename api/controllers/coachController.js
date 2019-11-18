@@ -87,7 +87,7 @@ let get_coachees_pagination = async (req, res) => {
     let _indicator = null
     let _indicatorPromise = Indicator.findOne({
         name: "weight"
-    }).select('_id')
+    }).select('_id').exec()
 
     let daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     coacheesPromise = Coachee.find({
@@ -97,10 +97,11 @@ let get_coachees_pagination = async (req, res) => {
             createdAt: 1
         })
         .skip(skipNum)
-        .limit(recordSize)
+        .limit(recordSize).exec()
     let convertedCoachees = []
-    [_indicator, coachees] = await Promise.all([_indicatorPromise, coacheesPromise]);
-
+    let indicatorObjctAndCoachees = await Promise.all([_indicatorPromise, coacheesPromise]);
+    _indicator = indicatorObjctAndCoachees[0]._id;
+    coachees = indicatorObjctAndCoachees[1];
     if (coachees.length > 0) {
         for (let coachee of coachees) {
             let unreadMessages = [];
@@ -158,7 +159,12 @@ let get_coachees_pagination = async (req, res) => {
                 _coachee: Types.ObjectId(coachee._id)
             })
 
-            [unreadMessages, unreadPosts, latestWeightRecord, memberRecord] = await Promise.all([unreadMessagesPromise, unreadPostsPromise, latestWeightRecordPromise, memberRecordPromise]);
+            let combineData = await Promise.all([unreadMessagesPromise, unreadPostsPromise, latestWeightRecordPromise, memberRecordPromise]);
+            unreadMessages = combineData[0];
+            unreadPosts = combineData[1];
+            latestWeightRecord = combineData[2];
+            memberRecord = combineData[3];
+
             if (unreadMessages.length > 0) {
                 unreadMessageItems = unreadMessages.length;
                 unreadMessageEarliestDate = unreadMessages[0].createdAt
@@ -206,8 +212,9 @@ let get_coachees_pagination = async (req, res) => {
                         }
                     ]
                 });
-                let [weekHabitlist, habitsOfLastSevenDays] = await Promise.all([weekHabitlistPromise, habitsOfLastSevenDaysPromise])
-
+                let weekListAndLastSevenDays = await Promise.all([weekHabitlistPromise, habitsOfLastSevenDaysPromise])
+                weekHabitlist = weekListAndLastSevenDays[0]
+                habitsOfLastSevenDays = weekListAndLastSevenDays[1]
                 //get days of member
                 let differenceDays = differenceInCalendarDays(new Date(), memberRecord.createdAt)
                 // judge days of member less than 7

@@ -20,6 +20,7 @@ const membershipCategoryController = require('./membershipCategoryController');
 const membershipController = require('./membershipController');
 const healthyTipController = require('./healthyTipController');
 const memberRecordController = require('./memberRecordController');
+const companyCodeController=require('./companyCodeController')
 module.exports = {
     authController,
     coachController,
@@ -36,5 +37,6 @@ module.exports = {
     membershipCategoryController,
     membershipController,
     healthyTipController,
-    memberRecordController
+    memberRecordController,
+    companyCodeController
 };
