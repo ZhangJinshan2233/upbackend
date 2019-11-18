@@ -28,9 +28,17 @@ const coacheeSchema = new Schema({
         type: String,
         required: true
     },
-    userType: {
+    // userType: {
+    //     type: String,
+    //     default: "freeCoachee"
+    // },
+     userType: {
         type: String,
-        default: "freeCoachee"
+        default: "Coachee"
+    },
+    isMember:{
+        type:Boolean,
+        default:true
     },
     gender: {
         type: String,
@@ -68,13 +76,13 @@ const coacheeSchema = new Schema({
         type: Date,
         default: Date.now
     },
-    membershipEndDate: {
-        type: Date
-    },
-    membershipStartDate: {
-        type: Date,
-        default:Date.now
-    },
+    // membershipEndDate: {
+    //     type: Date
+    // },
+    // membershipStartDate: {
+    //     type: Date,
+    //     default:Date.now
+    // },
     lifeStyleAssessments: [{
         _id: false,
         question: {

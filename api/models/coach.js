@@ -35,7 +35,7 @@ const coachSchema = new Schema({
     },
     userType: {
         type: String,
-        default: "coach"
+        default: "Coach"
     },
     lastTimeLogin: {
         type: Date,

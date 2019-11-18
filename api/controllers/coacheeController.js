@@ -2,7 +2,10 @@ const {
     Coachee,
     Coach,
     HabitCategory,
-    Habit
+    Habit,
+    MembershipCategory,
+    Membership,
+    MemberRecord
 } = require('../models');
 const {
     addDays
@@ -35,12 +38,30 @@ let signup = async (req, res) => {
     }).select('_id');
     let newUser = await Coachee.create({
         _coach: systyemCoach._id,
-        membershipEndDate: addDays(Date.now(), 7),
+        // membershipEndDate: addDays(Date.now(), 7),
         ...req.body
     });
 
     if (!newUser) throw Error('created unsuccessfully')
-    console.log(123)
+
+    let memberCategory=await MembershipCategory.findOne({
+        type:"free"
+    })
+    
+    let newMembership=await Membership.create({
+        endDate:addDays(Date.now(), memberCategory.duration),
+        _coachee:newUser._id,
+        _membershipCategory:memberCategory._id
+    })
+    if(!newMembership) throw Error('failed to register')
+
+    let memberRecord=await MemberRecord.create({
+        _coachee:newUser._id,
+        _membership:newMembership._id,
+        // expireAt:addDays(new Date(), memberCategory.duration)
+        expireAt:new Date("2019-11-16T01:40:25.618Z")
+    })
+
     let emailContent = "Welcome to the UP Health community. " +
         "You'll find no where like this where great place where" +
         " friendships meet professional coaching so that becoming" +

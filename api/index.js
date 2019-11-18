@@ -47,6 +47,7 @@ app.use('/api/membershipCategories',routes.membershipCategoryRoute)
 app.use('/api/challengeCategories',routes.challengeCategoryRoute)
 app.use('/api/unreadNotifications',routes.unreadNotificationRoute)
 app.use('/api/healthyTips',routes.healthyTipRoute)
+app.use('/api/memberRecords',routes.memberRecordRoute)
 
 // error handler for not existed api
 app.use(function (req, res, next) {

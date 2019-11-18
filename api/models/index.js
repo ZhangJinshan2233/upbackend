@@ -18,7 +18,8 @@ const FoodJournalPost = require('./foodJournalPost');
 const UnreadNotification = require('./unreadNotification');
 const MembershipCategory = require('./membershipCategory');
 const Membership = require('./membership');
-const HealthyTip = require('./healthyTip')
+const HealthyTip = require('./healthyTip');
+const MemberRecord=require('./memberRcord')
 //fix deprecation warnings
 mongoose.set('useFindAndModify', false);
 mongoose.set("useUnifiedTopology", true);
@@ -26,7 +27,7 @@ mongoose.connect(config.dbUrl, {
     socketTimeoutMS: 3000000,
     keepAlive: 3000000,
     useNewUrlParser: true,
-    autoIndex: false
+    // autoIndex: false
 })
 
 connection.on('open', function () {
@@ -55,5 +56,6 @@ module.exports = {
     UnreadNotification,
     MembershipCategory,
     Membership,
-    HealthyTip
+    HealthyTip,
+    MemberRecord
 }

@@ -1,7 +1,8 @@
 'use strict'
 const {
     Coach,
-    Coachee
+    Coachee,
+    MemberRecord
 } = require('../models');
 const helpers = require('../helpers');
 const bcrypt = require('bcrypt');
@@ -9,7 +10,8 @@ const randToken = require('rand-token');
 const h = require('../helpers')
 const refreshTokens = {};
 const {
-    compareDesc,compareAsc
+    compareDesc,
+    compareAsc
 } = require('date-fns');
 /**
  * @function signin.
@@ -23,7 +25,6 @@ let signin = async (req, res) => {
         email,
         password
     } = req.body
-    console.log(req.body)
     let currentUser = {};
     let coach = {};
     let coachee = {};
@@ -32,15 +33,17 @@ let signin = async (req, res) => {
         email: email
     })
     if (coachee) {
-        if (coachee.userType === "freeCoachee" || coachee.userType === "premiumCoachee") {
-            if (compareAsc(coachee.membershipEndDate, new Date())===-1) {
-                await Coachee.findByIdAndUpdate(coachee._id, {
-                    $set: {
-                        userType: "publicCoachee"
-                    }
-                })
-            }
+        let isMember = await MemberRecord.findOne({
+            _coachee: coachee._id
+        })
+        if (!isMember) {
+            await Coachee.findByIdAndUpdate(coachee._id, {
+                $set: {
+                    isMember: false
+                }
+            })
         }
+
     }
     if (!coachee) {
         coach = await Coach.findOne({
@@ -149,7 +152,7 @@ let change_password = async (req, res, next) => {
         newPassword
     } = req.body
     try {
-        if (userType == "freeCoachee" || userType == "premiumCoachee") {
+        if (userType == "Coachee") {
 
             currentUser = await Coachee.findOne({
                 _id: _id

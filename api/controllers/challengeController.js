@@ -30,7 +30,7 @@ let create_challenge = async (req, res) => {
 
     let coachee = await Coachee.findById(_coachee).select('membershipEndDate')
 
-    if (userType === "freeCoachee" || userType === "premiumCoachee") {
+    if (userType === "Coachee") {
         if (compareDesc(coachee.membershipEndDate, new Date()) === 1) {
             throw Error('only member can join')
         }
@@ -332,11 +332,11 @@ let create_new_comment = async (req, res) => {
         _id
     } = req.user
     let post = {}
-    if (userType == "freeCoachee" || userType == "premiumCoachee") {
+    if (userType == "Coachee") {
         _coachee = _id;
     }
 
-    if (userType == "coach" || userType == "adminCoach") {
+    if (userType == "Coach" || userType == "AdminCoach") {
         isCoach = true;
         _coach = _id
     }

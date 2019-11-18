@@ -11,16 +11,17 @@ const habitCategoryRoute = require('./habitCategoryRoute');
 
 const habitRoute = require('./habitRoute');
 
-const habitlistRecordRoute=require('./habitlistRecordRoute');
-const indicatorRoute=require('./indicatorRoute');
-const indicatorRecordRoute=require('./indicatorRecordRoute');
-const challengeCategoryRoute=require('./challengeCategoryRoute');
-const challengeRoute=require('./challengeRoute');
-const chatRoute=require('./chatRoute');
-const unreadNotificationRoute=require('./unreadNotificationRoute');
-const membershipCategoryRoute=require('./membershipCategoryRoute');
-const membershipRoute=require('./membershipRoute');
-const healthyTipRoute=require('./healthyTipRoute')
+const habitlistRecordRoute = require('./habitlistRecordRoute');
+const indicatorRoute = require('./indicatorRoute');
+const indicatorRecordRoute = require('./indicatorRecordRoute');
+const challengeCategoryRoute = require('./challengeCategoryRoute');
+const challengeRoute = require('./challengeRoute');
+const chatRoute = require('./chatRoute');
+const unreadNotificationRoute = require('./unreadNotificationRoute');
+const membershipCategoryRoute = require('./membershipCategoryRoute');
+const membershipRoute = require('./membershipRoute');
+const healthyTipRoute = require('./healthyTipRoute');
+const memberRecordRoute = require('./memberRecordRoute')
 module.exports = {
     authRoute,
     coachRoute,
@@ -37,5 +38,6 @@ module.exports = {
     unreadNotificationRoute,
     membershipCategoryRoute,
     membershipRoute,
-    healthyTipRoute
+    healthyTipRoute,
+    memberRecordRoute
 }

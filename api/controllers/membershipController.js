@@ -25,23 +25,23 @@ let create_membership = async (req, res) => {
     if (!_membershipCategory || !coachees.length || !_coach)
         throw Error('less information');
     for (let _coachee of coachees) {
-        let membershipEndDate = null;
-        let coachee = await Coachee.findById(_coachee).select('_id _coach membershipEndDate userType')
-        if (coachee.userType === "publicCoachee") {
-            membershipEndDate = membershipEndDateObject['publicCoachee'](memberCategory.duration)
-        } else {
-            membershipEndDate = membershipEndDateObject['freeCoacheeAndPremiumCoachee'](coachee.membershipEndDate, memberCategory.duration)
-
-        }
+        let coachee = await Coachee.findById(_coachee).select('_id _coach isMember userType')
         let newMembership = await Membership.create({
-            _coachee,
-            _membershipCategory,
+            endDate: addDays(Date.now(), memberCategory.duration),
+            _coachee: coachee._id,
+            _membershipCategory: memberCategory._id
+        })
+        if (!newMembership) throw Error('failed to register')
+
+        let memberRecord = await MemberRecord.create({
+            _coachee: coachee._id,
+            _membership: newMembership._id,
+            expireAt: addDays(new Date(), memberCategory.duration)
         })
         await Coachee.findByIdAndUpdate(_coachee, {
             $set: {
-                membershipEndDate,
-                userType: 'premiumCoachee',
-                _coach
+                _coach,
+                isMember: true
             }
         })
         if (!newMembership) throw Error('created membership unsuccessfully')

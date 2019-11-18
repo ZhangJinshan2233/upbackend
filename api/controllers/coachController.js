@@ -5,7 +5,8 @@ const {
     Indicator,
     Habit,
     HabitlistRecord,
-    IndicatorRecord
+    IndicatorRecord,
+    MemberRecord
 } = require('../models')
 
 const {
@@ -71,7 +72,11 @@ let signup = async (req, res) => {
         throw Error(err)
     }
 }
-
+/**
+ * get coachees pagination
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_coachees_pagination = async (req, res) => {
     let {
         _id
@@ -157,37 +162,88 @@ let get_coachees_pagination = async (req, res) => {
                 changedWeight = latestWeightRecord.value - coachee.weight
             }
 
-            let {
-                endOfDay
-            } = convert_time_to_localtime(format(subDays(new Date(), 1), 'MM/dd/yyyy'))
-            let {
-                startOfDay
-            } = convert_time_to_localtime(format(subDays(new Date(), 7), 'MM/dd/yyyy'))
-            let weekHabitlist = await get_week_habitlist(coachee._id)
-            habitsOfLastSevenDays = await HabitlistRecord.find({
-                $and: [{
-                        _coachee: coachee._id
-                    },
-                    {
-                        createDate: {
-                            "$gte": startOfDay
+            //get is member or not 
+            let memberRecord = null
+            memberRecord = await MemberRecord.findOne({
+                _coachee: Types.ObjectId(coachee._id)
+            })
+            // if coachee is a member
+
+            let averageCompletedPercent = 0;
+            if (memberRecord) { //judge coachee is member or not 
+                let totalCompletedPercent = 0;
+                //get habits of each day of week
+                let haveHabitDays = 0;
+                let {
+                    endOfDay
+                } = convert_time_to_localtime(format(subDays(new Date(), 1), 'MM/dd/yyyy'))
+
+
+                let {
+                    startOfDay
+                } = convert_time_to_localtime(format(subDays(new Date(), 7), 'MM/dd/yyyy'))
+
+                let weekHabitlist = await get_week_habitlist(coachee._id)
+
+                //get habit records of last seven days
+                habitsOfLastSevenDays = await HabitlistRecord.find({
+                    $and: [{
+                            _coachee: coachee._id
+                        },
+                        {
+                            createDate: {
+                                "$gte": startOfDay
+                            }
+                        }, {
+                            createDate: {
+                                "$lte": endOfDay
+                            }
                         }
-                    }, {
-                        createDate: {
-                            "$lte": endOfDay
+                    ]
+                });
+                //get days of member
+                let differenceDays = differenceInCalendarDays(new Date(), memberRecord.createdAt)
+                // judge days of member less than 7
+                if (differenceDays < 7) {
+                    if (differenceDays < 1) {
+                        averageCompletedPercent = 1
+                    } else {
+                        for (let i = 1; i <= differenceDays; i++) {
+                            let completedHabitPercent = 0;
+                            let day = getDay(subDays(new Date(), i))
+                            habitsOfSpecialDay = weekHabitlist.filter(item => {
+                                return item.day === daysOfWeek[day]
+                            })
+                            if (habitsOfSpecialDay[0].habits.length > 0) {
+                                haveHabitDays += 1;
+                                let {
+                                    startOfDay: startTimeofDay
+                                } = convert_time_to_localtime(format(subDays(new Date(), i), 'MM/dd/yyyy'))
+
+                                if (habitsOfLastSevenDays.length > 0) {
+                                    let habitsRecordOfSpecialDay = habitsOfLastSevenDays.filter(item => {
+                                        return isSameDay(item.createDate, startTimeofDay)
+                                    })
+
+                                    if (habitsRecordOfSpecialDay.length > 0) {
+                                        let completedHabit = habitsRecordOfSpecialDay[0].habits.filter(item => {
+                                            return item.status == true
+                                        })
+
+                                        completedHabitPercent = completedHabit.length / (habitsRecordOfSpecialDay[0].habits.length)
+
+                                    } else {
+                                        completedHabitPercent = 0
+                                    }
+
+                                }
+                            }
+                            totalCompletedPercent += completedHabitPercent;
                         }
                     }
-                ]
-            });
-            let differenceDays = differenceInCalendarDays(new Date(), coachee.membershipStartDate)
-            let totalCompletedPercent = 0;
-            let averageCompletedPercent = 0;
-            let haveHabitDays = 0;
-            if (differenceDays < 7) {
-                if (differenceDays < 1) {
-                    averageCompletedPercent = 1
+
                 } else {
-                    for (let i = 1; i <= differenceDays; i++) {
+                    for (let i = 1; i <= 7; i++) {
                         let completedHabitPercent = 0;
                         let day = getDay(subDays(new Date(), i))
                         habitsOfSpecialDay = weekHabitlist.filter(item => {
@@ -198,12 +254,10 @@ let get_coachees_pagination = async (req, res) => {
                             let {
                                 startOfDay: startTimeofDay
                             } = convert_time_to_localtime(format(subDays(new Date(), i), 'MM/dd/yyyy'))
-
                             if (habitsOfLastSevenDays.length > 0) {
                                 let habitsRecordOfSpecialDay = habitsOfLastSevenDays.filter(item => {
                                     return isSameDay(item.createDate, startTimeofDay)
                                 })
-
                                 if (habitsRecordOfSpecialDay.length > 0) {
                                     let completedHabit = habitsRecordOfSpecialDay[0].habits.filter(item => {
                                         return item.status == true
@@ -221,48 +275,21 @@ let get_coachees_pagination = async (req, res) => {
                     }
                 }
 
-            } else {
-                for (let i = 1; i <= 7; i++) {
-                    let completedHabitPercent = 0;
-                    let day = getDay(subDays(new Date(), i))
-                    habitsOfSpecialDay = weekHabitlist.filter(item => {
-                        return item.day === daysOfWeek[day]
-                    })
-                    if (habitsOfSpecialDay[0].habits.length > 0) {
-                        haveHabitDays += 1;
-                        let {
-                            startOfDay: startTimeofDay
-                        } = convert_time_to_localtime(format(subDays(new Date(), i), 'MM/dd/yyyy'))
-                        if (habitsOfLastSevenDays.length > 0) {
-                            let habitsRecordOfSpecialDay = habitsOfLastSevenDays.filter(item => {
-                                return isSameDay(item.createDate, startTimeofDay)
-                            })
-                            if (habitsRecordOfSpecialDay.length > 0) {
-                                let completedHabit = habitsRecordOfSpecialDay[0].habits.filter(item => {
-                                    return item.status == true
-                                })
-
-                                completedHabitPercent = completedHabit.length / (habitsRecordOfSpecialDay[0].habits.length)
-
-                            } else {
-                                completedHabitPercent = 0
-                            }
-
-                        }
-                    }
-                    totalCompletedPercent += completedHabitPercent;
+                if (haveHabitDays >= 1) {
+                    averageCompletedPercent = totalCompletedPercent / haveHabitDays
+                } else {
+                    averageCompletedPercent = 1
                 }
-            }
-            if (haveHabitDays >= 1) {
-                averageCompletedPercent = totalCompletedPercent / haveHabitDays
+
+                //get remaining days of member 
+
+                remainingDaysOfMembership = differenceInCalendarDays(memberRecord.expireAt, new Date())
+                console.log(remainingDaysOfMembership)
             } else {
-                averageCompletedPercent = 1
-            }
-            if (coachee.membershipEndDate >= new Date()) {
-                remainingDaysOfMembership = differenceInCalendarDays(coachee.membershipEndDate, new Date())
-            } else {
+                averageCompletedPercent = 0;
                 remainingDaysOfMembership = 0
             }
+
             let convertedCoachee = {
                 _id: coachee._id,
                 email: coachee.email,
@@ -292,6 +319,7 @@ let get_coachee = async (req, res) => {
     } = req.params
 
     coachee = await Coachee.findById(_id)
+
     if (!coachee) throw Error('can not find coachee')
 
     res.status(200).json({
