@@ -20,6 +20,10 @@ const coacheeSchema = new Schema({
         ref: 'Coach',
         default: null,
     },
+    group:{
+        type:String,
+        default:"individual"
+    },
     firstName: {
         type: String,
         required: true
@@ -76,13 +80,6 @@ const coacheeSchema = new Schema({
         type: Date,
         default: Date.now
     },
-    // membershipEndDate: {
-    //     type: Date
-    // },
-    // membershipStartDate: {
-    //     type: Date,
-    //     default:Date.now
-    // },
     lifeStyleAssessments: [{
         _id: false,
         question: {
