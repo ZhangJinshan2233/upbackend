@@ -5,7 +5,6 @@ const connection = mongoose.connection;
 const Coachee = require('./coachee');
 const Coach = require('./coach');
 const HabitCategory = require('./habitCategory');
-const TimelinePost = require('./timelinePost');
 const Habit = require('./habit');
 const HabitlistRecord = require('./habitlistRecord');
 const Indicator = require('./indicator');
@@ -52,7 +51,6 @@ module.exports = {
     FoodJournalPost,
     ChatRoom,
     Message,
-    TimelinePost,
     UnreadNotification,
     MembershipCategory,
     Membership,

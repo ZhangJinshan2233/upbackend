@@ -4,9 +4,6 @@ const authRoute = require('./authRoute');
 const coacheeRoute = require('./coacheeRoute');
 
 const coachRoute = require('./coachRoute');
-
-const timelinePostRoute = require('./timelinePostRoute');
-
 const habitCategoryRoute = require('./habitCategoryRoute');
 
 const habitRoute = require('./habitRoute');
@@ -29,7 +26,6 @@ module.exports = {
     habitCategoryRoute,
     habitRoute,
     habitlistRecordRoute,
-    timelinePostRoute,
     indicatorRoute,
     indicatorRecordRoute,
     challengeCategoryRoute,
