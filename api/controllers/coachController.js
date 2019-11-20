@@ -1,6 +1,8 @@
 const {
     Coach,
     Coachee,
+    CommonCoach,
+    AdminCoach,
     UnreadNotification,
     Indicator,
     Habit,
@@ -31,41 +33,47 @@ const {
  * @returns string.
  */
 let signup = async (req, res) => {
-
     let {
         email,
-        password,
-        firstName,
-        lastName
+        ...remainingProperties
     } = req.body
-
-    if (!email || !password || !firstName || !lastName)
-
+    let userType = req.query.userType || "coach"
+    if (!email)
         throw Error('You need to input required information')
-
     try {
-
-        let coachee = await Coachee.findOne({
+        let coacheePromise = Coachee.findOne({
             email: email
         });
 
-        let coach = await Coach.findOne({
+        let coachPromise = Coach.findOne({
             email: email
         });
+
+        let coachAndCoachee = await Promise.all([coachPromise, coacheePromise])
+
+        coach = coachAndCoachee[0];
+
+        coachee = coachAndCoachee[1];
 
         if (coach || coachee) throw Error('email already existed');
 
-        let newCoach = new Coach({
-            email,
-            password,
-            firstName,
-            lastName
-        });
+        let newCoach = {};
 
-        await newCoach.save()
+        if (userType === "coach") {
+            newCoach = await CommonCoach.create({
+                email,
+                ...remainingProperties
+            })
+        } else {
+            newCoach = await AdminCoach.create({
+                email,
+                ...remainingProperties
+            })
+        }
+
 
         return res.status(200).json({
-            msg: "registe successfully"
+            newCoach
         })
 
     } catch (err) {
@@ -115,7 +123,6 @@ let get_coachees_pagination = async (req, res) => {
             let latestWeightRecord = 0
             let memberRecord = null
             //get unreadNotifications
-
             let unreadMessagesPromise = UnreadNotification.find({
                 $and: [{
                     type: "message"
@@ -341,8 +348,23 @@ let get_coachee = async (req, res) => {
         coachee
     })
 }
+
+let get_coach = async (req, res) => {
+    let {
+        coachId: _id
+    } = req.params
+
+    coach = await AdminCoach.findById(_id)
+
+    if (!coach) throw Error('can not find coachee')
+
+    res.status(200).json({
+        coach
+    })
+}
 module.exports = {
     signup,
     get_coachees_pagination,
-    get_coachee
+    get_coachee,
+    get_coach
 }

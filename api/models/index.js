@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const config = require('../config');
 const connection = mongoose.connection;
 const Coachee = require('./coachee');
-const Coach = require('./coach');
+const {Coach, CommonCoach,AdminCoach }= require('./coach');
 const HabitCategory = require('./habitCategory');
 const Habit = require('./habit');
 const HabitlistRecord = require('./habitlistRecord');
@@ -42,6 +42,8 @@ connection.on('error', function (err) {
 module.exports = {
     Coachee,
     Coach,
+    CommonCoach,
+    AdminCoach,
     HabitCategory,
     Habit,
     HabitlistRecord,

@@ -1,10 +1,12 @@
-'use strict'
+'use strict';
 const {
     Schema,
     model
 } = require('mongoose')
 const bcrypt = require('bcrypt')
-
+const baseOptions = {
+    discriminatorKey: 'userType', // our discriminator key, could be anything
+};
 const coachSchema = new Schema({
     email: {
         type: String,
@@ -15,8 +17,9 @@ const coachSchema = new Schema({
     },
     imgData: {
         type: Buffer,
-        default:null
+        default: null
     },
+
     imgType: {
         type: String,
         default: 'image/jpeg'
@@ -33,34 +36,15 @@ const coachSchema = new Schema({
         type: String,
         required: true
     },
-    userType: {
-        type: String,
-        default: "Coach"
-    },
-    lastTimeLogin: {
-        type: Date,
-        default: Date.now
-    },
-    coachees: [{
-        _id: false,
-        _coachee: {
-            type: Schema.Types.ObjectId,
-            ref: 'Coachee'
-        }
-    }],
-}, {
+}, baseOptions, {
     timestamps: {
         createdAt: 'createdAt',
         updatedAt: 'updatedAt'
     }
 })
-
 coachSchema.pre('save', function (next) {
-
     var coach = this;
-
     if (!coach.isModified('password')) return next(err);
-
     bcrypt.genSalt(10, function (err, salt) {
         if (err) return next(err);
         bcrypt.hash(coach.password, salt, function (err, hash) {
@@ -72,7 +56,6 @@ coachSchema.pre('save', function (next) {
 })
 
 coachSchema.methods.comparePassword = async function (candidatePassword) {
-
     try {
         const match = await bcrypt.compare(candidatePassword, this.password);
         return match
@@ -80,4 +63,35 @@ coachSchema.methods.comparePassword = async function (candidatePassword) {
         throw Error(err)
     }
 }
-module.exports = model('Coach', coachSchema)
+
+const Coach = model('Coach', coachSchema);
+
+const CommonCoach = Coach.discriminator('CommonCoach', new Schema({
+    specialities: [{
+        _id: false,
+        speciality: String
+    }],
+    coachees: [{
+        _id: false,
+        _coachee: {
+            type: Schema.Types.ObjectId,
+            ref: 'Coachee'
+        }
+    }]
+}))
+
+const AdminCoach = Coach.discriminator('AdminCoach', new Schema({
+    coachees: [{
+        _id: false,
+        _coachee: {
+            type: Schema.Types.ObjectId,
+            ref: 'Coachee'
+        }
+    }]
+}))
+
+module.exports = {
+    Coach,
+    CommonCoach,
+    AdminCoach
+}

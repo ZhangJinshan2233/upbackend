@@ -19,5 +19,10 @@ Router
     .get(passport.authenticate('jwt', {
         session: false
     }), coachController.get_coachee)
-
+Router
+    .route('/:coachId')
+    .get(passport.authenticate('jwt', {
+        session: false
+    }), coachController.get_coach)
+    
 module.exports = Router;
