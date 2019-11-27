@@ -8,11 +8,11 @@ const {
 let NotificationClient = new Client({});
 
 NotificationClient.setApp({
-    appAuthKey: "NWQ5OGU0NGQtY2ZmYS00NjAzLWIyMWMtYWEwNGIzNmM5ODI2",
-    appId: "2679e88f-acf0-4ea1-a42a-35fbff80ff9f"
+    appAuthKey: config.appAuthKey,
+    appId: config.appId
 });
 
-NotificationClient.userAuthKey = "ZDE3MjliMzQtMTQxMC00YzU2LWI4YTMtNzA1Njg3NTE4MzE0";
+NotificationClient.userAuthKey = config.userAuthKey;
 
 let send_notification = (name, recipientId, notificationContent) => {
 
