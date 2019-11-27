@@ -68,6 +68,10 @@ const coacheeSchema = new Schema({
         type: Number,
         required: true
     },
+    goal:{
+        type:String,
+        default:""
+    },
     firstTimeLogin: {
         type: Boolean,
         default: true

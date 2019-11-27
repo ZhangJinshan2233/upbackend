@@ -6,37 +6,34 @@ const coachController = require('./coachController');
 
 const coacheeController = require('./coacheeController');
 
-const habitCategoryController = require('./habitCategoryController');
-
 const habitController = require('./habitController');
 const habitlistRecordController = require('./habitlistRecordController');
 const indicatorController = require('./indicatorController');
 const indicatorRecordController = require('./indicatorRecordController');
-const challengeCategoryController = require('./challengeCategoryController');
 const challengeController = require('./challengeController');
 const chatController = require('./chatController');
 const unreadNotificationController = require('./unreadNotificationController');
-const membershipCategoryController = require('./membershipCategoryController');
 const membershipController = require('./membershipController');
 const healthyTipController = require('./healthyTipController');
 const memberRecordController = require('./memberRecordController');
-const companyCodeController=require('./companyCodeController')
+const companyCodeController=require('./companyCodeController');
+const categoryController=require('./categoryController');
+const noteController=require('./noteController')
 module.exports = {
     authController,
     coachController,
     coacheeController,
-    habitCategoryController,
     habitController,
     habitlistRecordController,
     indicatorController,
     indicatorRecordController,
-    challengeCategoryController,
     challengeController,
     chatController,
     unreadNotificationController,
-    membershipCategoryController,
     membershipController,
     healthyTipController,
     memberRecordController,
-    companyCodeController
+    companyCodeController,
+    categoryController,
+    noteController
 };

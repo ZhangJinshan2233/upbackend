@@ -1,29 +1,23 @@
-const {Schema,model} =require('mongoose')
-
-membershipCategorySchema=new Schema({
-    name:{
-        type:String,
-        required:true
-    },
+const {
+    Schema
+} = require('mongoose')
+const Category = require('./category')
+const MembershipCategory = Category.discriminator('MembershipCategory', new Schema({
     duration:{
-        type:Number,
-        required:true,
-        default:0
+        type: Number,
+        required: true,
+        default: 7
     },
-    cost:{
-        type:Number,
-        required:true,
-        default:0
+    cost: {
+        type: Number,
+        required: true,
+        default: 0
     },
-    isObsolete:{
-        type:Boolean,
-        default:false
-    },
-    type:{
-        type:String,
-        required:true,
-        default:''
+    type: {
+        type: String,
+        required: true,
+        default: ''
     }
-})
+}))
 
-module.exports=model('MembershipCategory',membershipCategorySchema)
+module.exports = MembershipCategory

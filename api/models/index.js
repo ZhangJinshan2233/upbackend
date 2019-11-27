@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const config = require('../config');
 const connection = mongoose.connection;
 const Coachee = require('./coachee');
-const {Coach, CommonCoach,AdminCoach }= require('./coach');
+const {Coach,CommonCoach,AdminCoach }= require('./coach');
 const HabitCategory = require('./habitCategory');
 const Habit = require('./habit');
 const HabitlistRecord = require('./habitlistRecord');
@@ -19,7 +19,10 @@ const MembershipCategory = require('./membershipCategory');
 const Membership = require('./membership');
 const HealthyTip = require('./healthyTip');
 const MemberRecord = require('./memberRcord');
-const CompanyCode=require('./companyCode')
+const CompanyCode=require('./companyCode');
+const AppVersionCategory=require('./appVersionCategory')
+const Category=require('./category');
+const Note=require('./note')
 //fix deprecation warnings
 mongoose.set('useFindAndModify', false);
 mongoose.set("useUnifiedTopology", true);
@@ -42,6 +45,8 @@ connection.on('error', function (err) {
 module.exports = {
     Coachee,
     Coach,
+    AppVersionCategory,
+    Category,
     CommonCoach,
     AdminCoach,
     HabitCategory,
@@ -59,5 +64,6 @@ module.exports = {
     Membership,
     HealthyTip,
     MemberRecord,
-    CompanyCode
+    CompanyCode,
+    Note
 }

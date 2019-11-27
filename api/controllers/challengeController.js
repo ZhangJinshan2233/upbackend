@@ -492,7 +492,6 @@ let rate_post = async (req, res) => {
         postId
     } = req.params
     if (userType.includes('Coachee')) throw Error('can not rate post')
-    console.log(userType,rating,postId)
     let post=await FoodJournalPost.findByIdAndUpdate((postId), {
         $set: {
             rating

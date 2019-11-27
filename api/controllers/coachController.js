@@ -304,18 +304,18 @@ let get_coachees_pagination = async (req, res) => {
 
                 //get remaining days of member 
 
-                remainingDaysOfMembership = differenceInCalendarDays(memberRecord.expireAt, new Date())
-                console.log(remainingDaysOfMembership)
+                remainingDaysOfMembership = differenceInCalendarDays(memberRecord.expireAt, new Date()) + 1
             } else {
                 averageCompletedPercent = 0;
                 remainingDaysOfMembership = 0
             }
-
+            let coacheeImgData = ''
+            coachee.imgData ? coacheeImgData = Buffer.from(coachee.imgData).toString('base64') : coacheeImgData = ""
             let convertedCoachee = {
                 _id: coachee._id,
                 email: coachee.email,
                 name: coachee.firstName + coachee.lastName,
-                imgData: coachee.imgData,
+                imgData: coacheeImgData,
                 imgType: coachee.imgType,
                 averageCompletedPercent,
                 remainingDaysOfMembership,
@@ -339,13 +339,23 @@ let get_coachee = async (req, res) => {
     let {
         coacheeId: _id
     } = req.params
-
-    coachee = await Coachee.findById(_id)
+    let coacheeImgData = '';
+    let coachee = await Coachee.findById(_id)
 
     if (!coachee) throw Error('can not find coachee')
+    let deserializationCoachee = JSON.parse(JSON.stringify(coachee))
+    let {
+        imgData,
+        ...theRestOfPropertiesCoachee
+    } = deserializationCoachee
 
+    imgData ? coacheeImgData = Buffer.from(imgData).toString('base64') : coacheeImgData = ""
+    let currentUser = {
+        imgData: coacheeImgData,
+        ...theRestOfPropertiesCoachee
+    }
     res.status(200).json({
-        coachee
+        coachee:currentUser
     })
 }
 
@@ -354,7 +364,7 @@ let get_coach = async (req, res) => {
         coachId: _id
     } = req.params
 
-    coach = await AdminCoach.findById(_id)
+    let coach = await Coach.findById(_id)
 
     if (!coach) throw Error('can not find coachee')
 
@@ -362,9 +372,46 @@ let get_coach = async (req, res) => {
         coach
     })
 }
+let get_enrolled_and_expired_members = async (req, res) => {
+
+    let {
+        _id
+    } = req.user
+
+    let enrolledCoachees = [];
+    let expiredNumber = 0;
+    let promises = []
+    let membersNumber = 0
+    enrolledCoachees = await Coachee.find({
+        _coach: _id
+    })
+    if (enrolledCoachees.length >= 1) {
+        for (let i = 0; i < enrolledCoachees.length; i++) {
+            let checkMembershipPromise = MemberRecord.findOne({
+                _coachee: enrolledCoachees[i]._id
+            })
+            promises.push(checkMembershipPromise)
+        }
+        members = await Promise.all(promises)
+        membersNumber = members.filter((item) => {
+            return item
+        })
+        expiredNumber = enrolledCoachees.length - membersNumber.length
+
+    } else {
+        expiredNumber = enrolledCoachees.length
+    }
+
+
+    res.status(200).json({
+        enrolledNumber: enrolledCoachees.length,
+        expiredNumber
+    })
+}
 module.exports = {
     signup,
     get_coachees_pagination,
     get_coachee,
-    get_coach
+    get_coach,
+    get_enrolled_and_expired_members
 }

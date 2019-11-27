@@ -1,23 +1,12 @@
 const {
-    Schema,
-    model
+    Schema
 } = require('mongoose')
-const habitCategorySchema = new Schema({
-    name: {
-        type: String,
-        required: true
-    },
+const Category = require('./category')
+const HabitCategory = Category.discriminator('HabitCategory', new Schema({
     group: {
         type: String,
         required: true
-    },
-    description: {
-        type: String
-    },
-    isObsolete: {
-        type: Boolean,
-        default: false
     }
-})
+}))
 
-module.exports = model("HabitCategory", habitCategorySchema);
+module.exports = HabitCategory

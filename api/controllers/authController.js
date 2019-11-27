@@ -8,11 +8,6 @@ const helpers = require('../helpers');
 const bcrypt = require('bcrypt');
 const randToken = require('rand-token');
 const h = require('../helpers')
-const refreshTokens = {};
-const {
-    compareDesc,
-    compareAsc
-} = require('date-fns');
 /**
  * @function signin.
  * @public
@@ -115,33 +110,63 @@ let forgot_password = async (req, res) => {
  * @return JSON object
  */
 let get_whole_userInfo = async (req, res, next) => {
-    let user = {}
-    let coachee = {};
-    let coach = {};
+    let currentUser = {};
     let {
-        _id
+        _id,
+        userType
     } = req.user
-    coachee = await Coachee.findOne({
-            _id: _id
-        })
-        .populate('_coach', 'firstName lastName imgType imgData')
+    if (userType == "Coachee") {
+        let coachee = await Coachee.findById(_id)
+            .populate('_coach', '_id firstName lastName imgType imgData')
+        let deserializationCoachee = JSON.parse(JSON.stringify(coachee))
+        let {
+            imgData: coacheeImgData,
+            _coach,
+            ...theRestOfPropertiesCoachee
+        } = deserializationCoachee
 
-    if (!coachee) {
-        coach = await Coach.findOne({
-            _id: _id
-        });
+        let {
+            imgData: coachImgData,
+            ...theRestOfPropertiesCoach
+        } = _coach
+
+        coachImgData ? coachImgData = Buffer.from(coachImgData).toString('base64') : coachImgData = ""
+        coacheeImgData ? coacheeImgData = Buffer.from(coacheeImgData).toString('base64') : coacheeImgData = ""
+
+        let coach = {
+            imgData: coachImgData,
+            ...theRestOfPropertiesCoach
+        }
+        currentUser = {
+            imgData: coacheeImgData,
+            _coach: coach,
+            ...theRestOfPropertiesCoachee
+        }
+    } else {
+
+        let coach = await Coach.findById(_id)
+        //prevent theRestOfPropertiesCoach passing parent class of coach object
+        let deserializationCoach = JSON.parse(JSON.stringify(coach))
+        let {
+            imgData,
+            ...theRestOfPropertiesCoach
+        } = deserializationCoach
+        let coachImgData = ""
+        if (imgData) {
+            coachImgData = Buffer.from(imgData).toString('base64')
+        }
+        currentUser = {
+            imgData: coachImgData,
+            ...theRestOfPropertiesCoach
+        }
     }
-    user = coachee ? coachee : coach
-
-    let currentUser = JSON.parse(JSON.stringify(user))
-
     return res.status(200).json({
-        currentUser: currentUser
+        currentUser
     })
 };
 
 let change_password = async (req, res, next) => {
-    let currentUser = null
+    let currentUser = Object.create(null)
     let isMatch = false;
     let {
         _id,
@@ -164,9 +189,9 @@ let change_password = async (req, res, next) => {
             currentUser = await Coach.findOne({
                 _id: _id
             });
-            isMatch = currentUser.comparePassword(currentPassword)
-        }
 
+            isMatch = await currentUser.comparePassword(currentPassword)
+        }
         if (!isMatch) throw Error('The user ID and password don\'t match.');
 
         let salt = bcrypt.genSaltSync(10);
@@ -194,39 +219,40 @@ let change_password = async (req, res, next) => {
  */
 let update_profile_field = async (req, res) => {
     let {
-        _id
+        _id,
+        userType
     } = req.user;
-    let currentUser = null
-    let coach = {};
-    let coachee = {};
-
-    let changedFields = JSON.parse(JSON.stringify(req.body));
-
-    if (!changedFields) throw Error('nothing to be changed');
-
-    coachee = await Coachee.findOne({
-        _id: _id
-    })
-
-    if (!coachee) {
-        coach = await Coach.findOne({
+    let changedFields = req.body
+    let currentUser = {}
+    if (userType === 'Coachee') {
+        currentUser = await Coachee.findOne({
+            _id: _id
+        })
+    } else {
+        currentUser = await Coach.findOne({
             _id: _id
         })
     }
-
-    currentUser = coachee ? coachee : coach;
-
-    await currentUser.updateOne({
-        $set: changedFields
-    }).exec()
-
-    if (coachee && coachee.firstTimeLogin) {
+    if (Object.keys(req.body).includes('imgData')) {
+        let {
+            imgData,
+            ...otherProperties
+        } = req.body
+        let bufferImgData = Buffer.from(imgData, 'base64')
         await currentUser.updateOne({
             $set: {
-                firstTimeLogin: false
+                imgData: bufferImgData,
+                ...otherProperties
             }
-        })
+        }).exec()
+    } else {
+        await currentUser.updateOne({
+            $set: {
+                ...changedFields
+            }
+        }).exec()
     }
+
     res.status(200).json({
         message: "updated successfully"
     })

@@ -20,11 +20,11 @@ const app = express();
 app.use(cors());
 
 app.use(bodyParser.json({
-    limit: '10mb'
+    limit: '50mb'
 }));
 
 app.use(bodyParser.urlencoded({
-    limit: "10mb",
+    limit: "50mb",
     extended: true,
     parameterLimit: 100000
 }));
@@ -34,21 +34,20 @@ app.use(morgan('dev'));
 // refer to routes
 app.use('/api', routes.authRoute);
 app.use('/api/habits', routes.habitRoute);
-app.use('/api/indicatorRecords',routes.indicatorRecordRoute);
+app.use('/api/indicatorRecords', routes.indicatorRecordRoute);
 app.use('/api/indicators', routes.indicatorRoute);
 app.use('/api/habitlistRecord', routes.habitlistRecordRoute);
-app.use('/api/habitcategory', routes.habitCategoryRoute);
 app.use('/api/coachee', routes.coacheeRoute);
 app.use('/api/coach', routes.coachRoute);
-app.use('/api/chat',routes.chatRoute);
+app.use('/api/chat', routes.chatRoute);
 app.use('/api/challenges', routes.challengeRoute);
-app.use('/api/memberships',routes.membershipRoute);
-app.use('/api/membershipCategories',routes.membershipCategoryRoute);
-app.use('/api/challengeCategories',routes.challengeCategoryRoute);
-app.use('/api/unreadNotifications',routes.unreadNotificationRoute);
-app.use('/api/healthyTips',routes.healthyTipRoute);
-app.use('/api/memberRecords',routes.memberRecordRoute);
-app.use('/api/companyCodes',routes.companyCodeRoute)
+app.use('/api/memberships', routes.membershipRoute);
+app.use('/api/unreadNotifications', routes.unreadNotificationRoute);
+app.use('/api/healthyTips', routes.healthyTipRoute);
+app.use('/api/memberRecords', routes.memberRecordRoute);
+app.use('/api/companyCodes', routes.companyCodeRoute);
+app.use('/api/categories', routes.categoryRoute);
+app.use('/api/notes', routes.noteRoute);
 // error handler for not existed api
 app.use(function (req, res, next) {
     const err = new Error('not Found Api');

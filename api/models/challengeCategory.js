@@ -1,24 +1,11 @@
 const {
-    Schema,
-    model
+    Schema
 } = require('mongoose');
-
-const challengeCategorySchema = new Schema({
-    name: {
-        type: String,
-        required: true
-    },
-    description: {
-        type: String,
-        required: true
-    },
+const Category = require('./category')
+const ChallengeCategory = Category.discriminator('ChallengeCategory', new Schema({
     duration: {
         type: Number,
         required: true
-    },
-    isObsolete: {
-        type: Boolean,
-        default: false
     },
     isFree: {
         type: Boolean,
@@ -31,6 +18,6 @@ const challengeCategorySchema = new Schema({
         type: String,
         default: 'image/jpeg'
     }
-})
+}))
 
-module.exports = model('ChallengeCategory', challengeCategorySchema)
+module.exports = ChallengeCategory

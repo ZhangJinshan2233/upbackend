@@ -4,7 +4,6 @@ const {
     Types
 } = require('mongoose')
 
-
 let create_habit = async (req, res) => {
     let {
         _id: _coachee

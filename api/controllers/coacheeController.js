@@ -34,7 +34,7 @@ let signup = async (req, res) => {
     });
     let group = ""
     let {
-        companyCode:code,
+        companyCode: code,
         ...otherProperties
     } = req.body;
     if (code) {
@@ -63,7 +63,10 @@ let signup = async (req, res) => {
     let memberCategoryPromise = MembershipCategory.findOne({
         type: "free"
     })
-    let [newUser, memberCategory] = await Promise.all([newUserPromise, memberCategoryPromise])
+    let newUserAndMemberCategory = await Promise.all([newUserPromise, memberCategoryPromise])
+    let newUser = newUserAndMemberCategory[0];
+    let memberCategory = newUserAndMemberCategory[1]
+    console.log( memberCategory)
     if (!newUser) throw Error('created unsuccessfully')
     let newMembership = await Membership.create({
         endDate: addDays(Date.now(), memberCategory.duration),
