@@ -1,22 +1,16 @@
 'use strict'
-const {
-    unreadNotificationController
-} = require('./unreadNotificationController');
 const _h = require('../helpers')
 const notification = require('../notification');
-const {
-    compareDesc
-} = require('date-fns')
 const {
     Challenge,
     ChallengeCategory,
     FoodJournalPost,
     UnreadNotification,
-    Coachee
 } = require('../models');
 const {
     Types
 } = require('mongoose');
+const {convertBase64ToBuffer,convertBufferToBase64}=require('../helpers')
 /**
  * create new challenge record
  * @param {_challenge,value,createDate} req 
@@ -24,18 +18,8 @@ const {
  */
 let create_challenge = async (req, res) => {
     let {
-        _id: _coachee,
-        userType
+        _id: _coachee
     } = req.user
-
-    let coachee = await Coachee.findById(_coachee).select('membershipEndDate')
-
-    if (userType === "Coachee") {
-        if (compareDesc(coachee.membershipEndDate, new Date()) === 1) {
-            throw Error('only member can join')
-        }
-    }
-
     let {
         challengeCategoryId: _challengeCategory,
         startDate,
@@ -49,6 +33,7 @@ let create_challenge = async (req, res) => {
         endDate: new Date(endDate)
 
     })
+
     let challengeCategory = await ChallengeCategory.findById(_challengeCategory)
 
     let image = `data:${challengeCategory.imgType};base64,` + Buffer.from(challengeCategory.imgData).toString('base64');
@@ -65,7 +50,7 @@ let create_challenge = async (req, res) => {
 }
 
 /**
- * get latest record of all challenges
+ * get active chanllenges of all challenges
  * @param {*} req 
  * @param {*} res 
  */
@@ -129,7 +114,7 @@ let get_active_challenges = async (req, res) => {
 }
 
 /**
- * 
+ * create new post
  * @param {*} req 
  * @param {*} res 
  */
@@ -160,9 +145,8 @@ let create_new_post = async (req, res) => {
         ...otherProperties
     } = req.body
 
-    let bufferImgData = Buffer.from(imgData, 'base64')
     let newPost = await FoodJournalPost.create({
-        imgData: bufferImgData,
+        imgData: convertBase64ToBuffer(imgData),
         ...otherProperties
     })
     await Challenge.findByIdAndUpdate(
@@ -188,7 +172,7 @@ let create_new_post = async (req, res) => {
         _id: newPost._id,
         description: newPost.description,
         imgType: newPost.imgType,
-        imgData: Buffer.from(newPost.imgData).toString('base64'),
+        imgData: convertBufferToBase64(newPost.imgData),
         rating: newPost.rating,
         createDate: newPost.createDate,
         comments: newPost.comments,
@@ -259,7 +243,11 @@ let get_foodjournalposts_pagination_by_challengeId = async (req, res) => {
         foodJournalPosts
     })
 }
-
+/**
+ * get comments by post id
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_comments_by_postId = async (req, res) => {
     let {
         postId: _id
@@ -399,7 +387,11 @@ let create_new_comment = async (req, res) => {
         throw error
     }
 }
-
+/**
+ * get nonactive challenges
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_nonactive_challenges = async (req, res) => {
     let {
         _id,
@@ -480,7 +472,11 @@ let get_nonactive_challenges = async (req, res) => {
         nonactiveChallenges
     })
 }
-
+/**
+ * rate post
+ * @param {*} req 
+ * @param {*} res 
+ */
 let rate_post = async (req, res) => {
     let {
         userType
@@ -492,15 +488,13 @@ let rate_post = async (req, res) => {
         postId
     } = req.params
     if (userType.includes('Coachee')) throw Error('can not rate post')
-    let post=await FoodJournalPost.findByIdAndUpdate((postId), {
+    let post = await FoodJournalPost.findByIdAndUpdate((postId), {
         $set: {
             rating
         }
     })
-
-    console.log(post)
     res.status(200).json({
-        message:"rating successfully"
+        message: "rating successfully"
     })
 }
 module.exports = {

@@ -64,6 +64,10 @@ let send_email = async (toEmail, subjectData, htmlData) => {
 
 };
 
+/**
+ * convert time to local time
+ * @param {*} time string 
+ */
 let convert_time_to_localtime = (timestring) => {
 
     let convertTimeToDateFormat = new Date(timestring);
@@ -105,6 +109,10 @@ const membershipEndDateObject = {
     "freeCoacheeAndPremiumCoachee": set_membershipEndDate
 }
 
+/**
+ * get rateing description for food journal challenge
+ * @param {*} rating 
+ */
 let get_rating_description = function (rating) {
     let description = ''
     switch (true) {
@@ -133,6 +141,11 @@ let get_rating_description = function (rating) {
     return description
 }
 
+/**
+ * get all the habit of week for special coachee
+ * @param {*} coacheeId 
+ * @returns week habit list
+ */
 let get_week_habitlist = async (coacheeId) => {
     let habitsOfWeek = await Habit.aggregate([{
             $match: {
@@ -199,6 +212,30 @@ let get_week_habitlist = async (coacheeId) => {
 
     return weekHabitlist
 }
+
+
+/**
+ * convert image of base64 format to buffer
+ * @param {*} imgData 
+ */
+let convertBase64ToBuffer = (imgData) => {
+    let bufferImgData = Object.create(null)
+    if (imgData) {
+        bufferImgData = Buffer.from(imgData, 'base64')
+    }
+    return bufferImgData
+}
+/**
+ * convert image of buffer format to base64
+ * @param {*} imgData 
+ */
+let convertBufferToBase64 = (imgData) => {
+    let base64ImgData = Object.create(null)
+    if (imgData) {
+        base64ImgData = Buffer.from(imgData).toString('base64');
+    }
+    return base64ImgData
+}
 module.exports = {
     create_token,
     send_email,
@@ -206,5 +243,7 @@ module.exports = {
     errorHandler,
     membershipEndDateObject,
     get_rating_description,
-    get_week_habitlist 
+    get_week_habitlist,
+    convertBase64ToBuffer,
+    convertBufferToBase64
 }

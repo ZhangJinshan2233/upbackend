@@ -4,12 +4,7 @@ const {
     MembershipCategory,
     Coachee
 } = require('../models')
-const {
-    membershipEndDateObject
-} = require('../helpers')
-const {
-    Types
-} = require('mongoose');
+
 /**
  * create new challenge record
  * @param {_challenge,value,createDate} req 

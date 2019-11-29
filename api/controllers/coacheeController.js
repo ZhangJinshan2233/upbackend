@@ -21,7 +21,7 @@ const _ = require('lodash')
  */
 
 let signup = async (req, res) => {
-
+    
     let {
         email,
         firstName,
@@ -66,7 +66,6 @@ let signup = async (req, res) => {
     let newUserAndMemberCategory = await Promise.all([newUserPromise, memberCategoryPromise])
     let newUser = newUserAndMemberCategory[0];
     let memberCategory = newUserAndMemberCategory[1]
-    console.log( memberCategory)
     if (!newUser) throw Error('created unsuccessfully')
     let newMembership = await Membership.create({
         endDate: addDays(Date.now(), memberCategory.duration),

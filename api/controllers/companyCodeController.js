@@ -1,11 +1,7 @@
 'use strict'
 const {
-    CompanyCode,
-    Coachee
+    CompanyCode
 } = require('../models')
-const {
-    Types
-} = require('mongoose');
 const {
     addDays
 } = require('date-fns');

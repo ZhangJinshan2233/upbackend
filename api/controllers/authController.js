@@ -106,7 +106,8 @@ let forgot_password = async (req, res) => {
 }
 
 /**
- * @function get whole info
+ * get whole info (this function can get coach and coachee info)
+ * @function get_whole_userInfo
  * @return JSON object
  */
 let get_whole_userInfo = async (req, res, next) => {
@@ -165,7 +166,12 @@ let get_whole_userInfo = async (req, res, next) => {
     })
 };
 
-let change_password = async (req, res, next) => {
+/**
+ * change password
+ * @param {password} req 
+ * @param {*} res 
+ */
+let change_password = async (req, res) => {
     let currentUser = Object.create(null)
     let isMatch = false;
     let {
@@ -178,18 +184,11 @@ let change_password = async (req, res, next) => {
     } = req.body
     try {
         if (userType == "Coachee") {
-
-            currentUser = await Coachee.findOne({
-                _id: _id
-            })
-
+            currentUser = await Coachee.findById(_id)
             isMatch = await currentUser.comparePassword(currentPassword)
 
         } else {
-            currentUser = await Coach.findOne({
-                _id: _id
-            });
-
+            currentUser = await Coach.findById(_id)
             isMatch = await currentUser.comparePassword(currentPassword)
         }
         if (!isMatch) throw Error('The user ID and password don\'t match.');
@@ -225,13 +224,9 @@ let update_profile_field = async (req, res) => {
     let changedFields = req.body
     let currentUser = {}
     if (userType === 'Coachee') {
-        currentUser = await Coachee.findOne({
-            _id: _id
-        })
+        currentUser = await Coachee.findById(_id)
     } else {
-        currentUser = await Coach.findOne({
-            _id: _id
-        })
+        currentUser = await Coach.findOne(_id)
     }
     if (Object.keys(req.body).includes('imgData')) {
         let {

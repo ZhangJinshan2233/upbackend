@@ -1,15 +1,18 @@
 const {
     ChatRoom,
-    Message,
-    Coach,
-    Coachee
+    Message
 } = require('../models');
 
+/**
+ * go to chat room 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let go_to_chat_room = async (req, res) => {
     let {
         roomName: name
     } = req.params
-    let chatRoom = {}
+    let chatRoom =object.create(null)
     chatRoom = await ChatRoom.findOne({
         name
     })
@@ -25,7 +28,7 @@ let go_to_chat_room = async (req, res) => {
         //     participant: coachee._coach
         // })
         chatRoom = await ChatRoom.create({
-            name,
+            name
             // participants
         });
     }
@@ -33,6 +36,12 @@ let go_to_chat_room = async (req, res) => {
         chatRoom
     })
 }
+
+/**
+ * create new message
+ * @param {*} req 
+ * @param {*} res 
+ */
 let create_message = async (req, res) => {
     let {
         chatRoomId: _chatRoom,
@@ -59,14 +68,18 @@ let create_message = async (req, res) => {
         message: "created message successfully"
     })
 }
-
+/**
+ * get messages pagination by chatRoom
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_messages_pagination_by_chatRoom = async (req, res) => {
     let convertedMessages = []
     let {
         chatRoomId: _chatRoom
     } = req.params
     let skipNum = parseInt(req.query.skipNum);
-    let recordSize = 3;
+    let recordSize = 6;
     messages = await Message.find({
             _chatRoom
         })

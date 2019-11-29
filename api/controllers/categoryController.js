@@ -1,7 +1,12 @@
-const Model=require('../models')
+const Model = require('../models')
+const {
+    convertBase64ToBuffer,
+    convertBufferToBase64
+} = require('../helpers')
 /**
- * @function create new version category;
- * @param{name, version};
+ * create new  category('challenge category','habit category',
+ * 'membership category',and 'app vrsion category')
+ * @param{};
  */
 let create_category = async (req, res) => {
 
@@ -12,18 +17,14 @@ let create_category = async (req, res) => {
         name: name
     });
     if (category) throw new Error('name has existed already')
-    let newCategory = {}
+    let newCategory = Object.create(null)
     if (Object.keys(req.body).includes('imgData')) {
-        let bufferImgData = Object.create(null)
         let {
             imgData,
             ...otherProperties
         } = req.body
-        if (imgData) {
-            bufferImgData = Buffer.from(imgData, 'base64')
-        }
         newCategory = await Model.Category.create({
-            imgData: bufferImgData,
+            imgData: convertBase64ToBuffer(imgData),
             ...otherProperties
         })
     } else {
@@ -102,26 +103,26 @@ let update_category = async (req, res) => {
     let {
         categoryId: _id
     } = req.params
-    let {kind}=req.query
-   let changedProperties=req.body
+    let {
+        kind
+    } = req.query
+    let changedProperties = req.body
     if (Object.keys(req.body).includes('imgData')) {
-        let bufferImgData = Object.create(null)
         let {
             imgData,
             ...otherProperties
         } = req.body
         if (imgData) {
-            bufferImgData = Buffer.from(imgData, 'base64')
             await Model[kind].findOneAndUpdate(
                 _id, {
                     $set: {
-                        imgData: bufferImgData,
+                        imgData: convertBase64ToBuffer(imgData),
                         ...otherProperties
                     }
                 }).exec();
         }
     } else {
-        await  Model[kind].findByIdAndUpdate(
+        await Model[kind].findByIdAndUpdate(
             _id, {
                 $set: changedProperties
             }).exec();
