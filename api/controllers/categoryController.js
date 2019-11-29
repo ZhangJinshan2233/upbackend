@@ -17,7 +17,7 @@ let create_category = async (req, res) => {
         name: name
     });
     if (category) throw new Error('name has existed already')
-    let newCategory = Object.create(null)
+    let newCategory = {};
     if (Object.keys(req.body).includes('imgData')) {
         let {
             imgData,

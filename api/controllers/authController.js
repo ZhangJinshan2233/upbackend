@@ -172,7 +172,7 @@ let get_whole_userInfo = async (req, res, next) => {
  * @param {*} res 
  */
 let change_password = async (req, res) => {
-    let currentUser = Object.create(null)
+    let currentUser = {};
     let isMatch = false;
     let {
         _id,

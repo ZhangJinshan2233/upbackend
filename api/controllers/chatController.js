@@ -12,7 +12,7 @@ let go_to_chat_room = async (req, res) => {
     let {
         roomName: name
     } = req.params
-    let chatRoom =object.create(null)
+    let chatRoom ={}
     chatRoom = await ChatRoom.findOne({
         name
     })
@@ -78,7 +78,7 @@ let get_messages_pagination_by_chatRoom = async (req, res) => {
     let {
         chatRoomId: _chatRoom
     } = req.params
-    let skipNum = parseInt(req.query.skipNum);
+    let skipNum = parseInt(req.query.skipNum)||0;
     let recordSize = 6;
     messages = await Message.find({
             _chatRoom
