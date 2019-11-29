@@ -66,6 +66,7 @@ let get_healthyTips_pagination = async (req, res) => {
                 imgType,
                 imgData,
                 title,
+                url,
                 description,
                 isObsolete,
                 createdAt
@@ -78,6 +79,7 @@ let get_healthyTips_pagination = async (req, res) => {
                 _id,
                 image,
                 title,
+                url,
                 description,
                 isObsolete,
                 createdAt

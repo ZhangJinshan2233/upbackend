@@ -336,7 +336,7 @@ let create_new_comment = async (req, res) => {
         _coachee = _id;
     }
 
-    if (userType == "Coach" || userType == "AdminCoach") {
+    if (userType == "CommonCoach" || userType == "AdminCoach") {
         isCoach = true;
         _coach = _id
     }
