@@ -89,6 +89,9 @@ let errorHandler = async (asyncFunc) => {
     }
 };
 
+/**
+ * 
+ */
 let set_membershipEndDate_less_than_currentDate = function (duration) {
     return new Date(addDays(new Date(), duration))
 };
@@ -104,6 +107,7 @@ let set_membershipEndDate = function (endDate, duration) {
         return set_membershipEndDate_less_than_currentDate(duration)
     }
 }
+
 const membershipEndDateObject = {
     "publicCoachee": set_membershipEndDate_less_than_currentDate,
     "freeCoacheeAndPremiumCoachee": set_membershipEndDate
