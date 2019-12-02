@@ -183,7 +183,7 @@ let get_coachees_pagination = async (req, res) => {
             }
 
             if (latestWeightRecord) {
-                changedWeight = latestWeightRecord.value - coachee.weight
+                changedWeight = (latestWeightRecord.value - coachee.weight).toFixed(1)
             }
 
             let averageCompletedPercent = 0;
@@ -297,7 +297,7 @@ let get_coachees_pagination = async (req, res) => {
                 }
 
                 if (haveHabitDays >= 1) {
-                    averageCompletedPercent = totalCompletedPercent / haveHabitDays
+                    averageCompletedPercent = (totalCompletedPercent / haveHabitDays).toFixed(1)
                 } else {
                     averageCompletedPercent = 1
                 }

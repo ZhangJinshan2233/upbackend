@@ -226,7 +226,7 @@ let update_profile_field = async (req, res) => {
     if (userType === 'Coachee') {
         currentUser = await Coachee.findById(_id)
     } else {
-        currentUser = await Coach.findOne(_id)
+        currentUser = await Coach.findById(_id)
     }
     if (Object.keys(req.body).includes('imgData')) {
         let {
