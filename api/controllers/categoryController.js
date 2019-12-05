@@ -44,6 +44,7 @@ let get_categories = async (req, res) => {
     let currentCategories = await Model.Category.find({
         kind
     })
+    console.log(kind)
     let categories = []
     if (kind === "ChallengeCategory") {
         if (currentCategories.length > 0) {

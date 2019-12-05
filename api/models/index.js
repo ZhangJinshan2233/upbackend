@@ -20,7 +20,7 @@ const Membership = require('./membership');
 const HealthyTip = require('./healthyTip');
 const MemberRecord = require('./memberRcord');
 const CompanyCode=require('./companyCode');
-const AppVersionCategory=require('./appVersionCategory')
+const AppCategory=require('./appCategory')
 const Category=require('./category');
 const Note=require('./note')
 //fix deprecation warnings
@@ -45,7 +45,7 @@ connection.on('error', function (err) {
 module.exports = {
     Coachee,
     Coach,
-    AppVersionCategory,
+    AppCategory,
     Category,
     CommonCoach,
     AdminCoach,
