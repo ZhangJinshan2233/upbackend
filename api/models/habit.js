@@ -16,14 +16,17 @@ const habitSchema = new Schema({
         type: String
     },
     daysOfWeek: {
-        type:Array,
-        default:[]
+        type: Array,
+        default: []
 
-},
+    },
     isObsolete: {
         type: Boolean,
         default: false
     }
+}, {
+    timestamps: {
+        createdAt: 'createdAt'
+    }
 })
-
 module.exports = model('Habit', habitSchema)

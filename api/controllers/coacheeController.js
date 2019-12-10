@@ -84,7 +84,7 @@ let signup = async (req, res) => {
 
     let emailContent = "Welcome to the UP Health community. " +
         "You'll find no where like this where great place where" +
-        " friendships meet professional coaching so that becoming" +
+        " friendships meet professional coaching so that becoming " +
         "healthy becomes more fun and desirable. " +
         "We can't wait for you to join us and work " +
         "toward achieving your health goals together."
