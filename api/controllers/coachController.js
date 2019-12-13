@@ -299,12 +299,12 @@ let get_coachees_pagination = async (req, res) => {
                 if (haveHabitDays >= 1) {
                     averageCompletedPercent = (totalCompletedPercent / haveHabitDays).toFixed(1)
                 } else {
-                    averageCompletedPercent = 1
+                    averageCompletedPercent = 0
                 }
 
                 //get remaining days of member 
 
-                remainingDaysOfMembership = differenceInCalendarDays(memberRecord.expireAt, new Date()) + 1
+                remainingDaysOfMembership = differenceInCalendarDays(memberRecord.expireAt, new Date())
             } else {
                 averageCompletedPercent = 0;
                 remainingDaysOfMembership = 0
