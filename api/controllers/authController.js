@@ -120,6 +120,7 @@ let get_whole_userInfo = async (req, res, next) => {
         let coachee = await Coachee.findById(_id)
             .populate('_coach', '_id firstName lastName imgType imgData')
         let deserializationCoachee = JSON.parse(JSON.stringify(coachee))
+        
         let {
             imgData: coacheeImgData,
             _coach,

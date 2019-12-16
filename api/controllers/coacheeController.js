@@ -6,7 +6,9 @@ const {
     MembershipCategory,
     Membership,
     MemberRecord,
-    CompanyCode
+    CompanyCode,
+    IndicatorRecord,
+    Indicator
 } = require('../models');
 const {
     addDays
@@ -21,22 +23,23 @@ const _ = require('lodash')
  */
 
 let signup = async (req, res) => {
-    
+
     let {
         email,
         firstName,
+        companyCode: code,
+        weight,
+        ...otherProperties
     } = req.body
+
     let coacheePromise = Coachee.findOne({
         email: email
     });
     let coachPromise = Coach.findOne({
         email: email
     });
+
     let group = ""
-    let {
-        companyCode: code,
-        ...otherProperties
-    } = req.body;
     if (code) {
         let companyInfo = await CompanyCode.findOne({
             code
@@ -47,16 +50,33 @@ let signup = async (req, res) => {
         group = "individual"
     }
 
-    let systyemCoachPromise = Coach.findOne({
-        email: 'support@uphealth.sg'
-    }).select('_id');
-    let [coachee, coach, systyemCoach] = await Promise.all([coacheePromise, coachPromise, systyemCoachPromise])
+    let systyemCoachPromise = Coach
+        .findOne({
+            email: 'support@uphealth.sg'
+        })
+        .select('_id');
+
+    let weightIndicatorPromise = Indicator
+        .findOne({
+            name: 'weight'
+        })
+        .select('_id');
+
+    let [coachee, coach, systyemCoach, weightIndicator] = await Promise.all([
+        coacheePromise,
+        coachPromise,
+        systyemCoachPromise,
+        weightIndicatorPromise
+    ])
 
     if (coach || coachee) throw Error('Email already existed');
 
     let newUserPromise = Coachee.create({
         _coach: systyemCoach._id,
         group,
+        email,
+        firstName,
+        weight,
         ...otherProperties
     });
 
@@ -79,6 +99,13 @@ let signup = async (req, res) => {
         _coachee: newUser._id,
         _membership: newMembership._id,
         expireAt: addDays(new Date(), memberCategory.duration)
+    })
+
+    await IndicatorRecord.create({
+        _coachee: newUser._id,
+        value: weight,
+        _indicator: weightIndicator._id,
+        createDate: new Date()
     })
     if (!memberRecord) throw Error('failed to register');
 

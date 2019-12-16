@@ -46,7 +46,7 @@ const coacheeSchema = new Schema({
     },
     imgData: {
         type: Buffer,
-        default:null
+        default:""
     },
     imgType: {
         type: String,
