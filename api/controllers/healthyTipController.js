@@ -50,7 +50,7 @@ let get_healthyTips_pagination = async (req, res) => {
     let healthyTips = []
     let convertedHealthyTips = []
     let skipNum = parseInt(req.query.skipNum) || 0;
-    let recordSize = 3;
+    let recordSize = 2;
     healthyTips = await HealthyTip.find({
             isObsolete: false
         })

@@ -17,7 +17,7 @@ const coachSchema = new Schema({
     },
     imgData: {
         type: Buffer,
-        default: null
+        default: ""
     },
 
     imgType: {
