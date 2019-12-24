@@ -81,7 +81,6 @@ const coacheeSchema = new Schema({
         default: Date.now
     },
     lifeStyleAssessments: [{
-        _id: false,
         question: {
             type: String
         },

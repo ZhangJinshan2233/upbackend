@@ -28,7 +28,6 @@ const challengeSchema = new Schema({
         default: Date.now
     },
     posts: [{
-        _id: false,
         postModel: {
             type: String,
             required: true,

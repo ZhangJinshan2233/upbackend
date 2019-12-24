@@ -8,7 +8,6 @@ const chatRoomSchema = new Schema({
         type:String
     },
     participants: [{
-        _id: false,
         participantModel: {
             type: String,
             required: true,

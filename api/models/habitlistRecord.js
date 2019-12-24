@@ -19,8 +19,7 @@ const habitlistRecordSchema = new Schema({
         status: {
             type: Boolean,
             default: false
-        },
-        _id: false
+        }
     }]
 }, {
     timestamps: {
