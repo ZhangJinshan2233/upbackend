@@ -13,6 +13,10 @@ const h = require('../helpers')
 const {
     Types
 } = require('mongoose');
+
+let update_current_habit_record = async (req, res) => {
+
+}
 /**
  * @function create new habit record;
  * @param{name, groupName,description};
@@ -44,50 +48,49 @@ let create_habit_record = async (req, res) => {
     })
     if (habitlistRecordOfDay) {
         res.status(201).json({
-            habitsOfScheduleDay:habitlistRecordOfDay
+            habitsOfScheduleDay: habitlistRecordOfDay
         })
     } else {
         let daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
         let habits = []
         let currentDay = daysOfWeek[getDay(startOfDay)];
-        let habitsOfCurrentDay = await Habit.aggregate([{
-                $match: {
-                    $and: [{
+        let habitsOfCurrentDay = await Habit
+            .find({
+                $and: [{
                         _coachee: Types.ObjectId(_id)
                     }, {
                         isObsolete: false
-                    }]
+                    },
+                    {
+                        daysOfWeek: currentDay
+                    }
+                ]
+            })
+            .select('_id')
 
-                }
-            },
-            {
-                $unwind: {
-                    path: "$daysOfWeek"
-                }
-            },
-            {
-                $match: {
-                    daysOfWeek: currentDay
-                }
-            }
-        ])
         if (habitsOfCurrentDay.length > 0) {
             habits = habitsOfCurrentDay.reduce((acc, current) => {
                 let {
-                    name
+                    _id
                 } = current
-
                 return [...acc, {
-                    name,
+                    _habit: _id,
                     status: false
                 }]
             }, [])
         }
-        let habitsOfScheduleDay = await HabitlistRecord.create({
-            _coachee: Types.ObjectId(_id),
-            createDate: startOfDay,
-            habits
-        })
+        let newhabits = await HabitlistRecord
+            .create({
+                _coachee: Types.ObjectId(_id),
+                createDate: startOfDay,
+                habits
+            })
+        let habitsOfScheduleDay = await HabitlistRecord
+            .findById(newhabits._id)
+            .populate({
+                path: 'habits._habit',
+                select: 'name'
+            })
         res.status(201).json({
             habitsOfScheduleDay
         })
@@ -112,21 +115,27 @@ let get_habitlist_record_of_day = async (req, res) => {
         startOfDay,
         endOfDay
     } = h.convert_time_to_localtime(req.query.scheduleDay)
-    let habitsOfScheduleDay = await HabitlistRecord.findOne({
-        $and: [{
-                _coachee
-            },
-            {
-                createDate: {
-                    "$gte": startOfDay
+    let habitsOfScheduleDay = await HabitlistRecord
+        .findOne({
+            $and: [{
+                    _coachee
+                },
+                {
+                    createDate: {
+                        "$gte": startOfDay
+                    }
+                }, {
+                    createDate: {
+                        "$lte": endOfDay
+                    }
                 }
-            }, {
-                createDate: {
-                    "$lte": endOfDay
-                }
-            }
-        ]
-    });
+            ]
+        })
+        .populate({
+            path: 'habits._habit',
+            select: 'name'
+        })
+
     res.status(200).json({
         habitsOfScheduleDay
     })
@@ -167,20 +176,24 @@ let get_habitlist_record_of_current_week = async (req, res) => {
     let lastDayWeek = format(lastDayOfWeek(new Date()), 'MM/dd/yyyy');
     let firstDayWeek = format(subDays(new Date(lastDayWeek), 6), 'MM/dd/yyyy');
     let habitlistRecordOfWeek = await HabitlistRecord.find({
-        $and: [{
-                _coachee
-            },
-            {
-                createDate: {
-                    $gte: new Date(firstDayWeek).setHours(0, 0, 0, 0)
+            $and: [{
+                    _coachee
+                },
+                {
+                    createDate: {
+                        $gte: new Date(firstDayWeek).setHours(0, 0, 0, 0)
+                    }
+                }, {
+                    createDate: {
+                        $lte: new Date(lastDayWeek).setHours(23, 59, 59, 999)
+                    }
                 }
-            }, {
-                createDate: {
-                    $lte: new Date(lastDayWeek).setHours(23, 59, 59, 999)
-                }
-            }
-        ]
-    })
+            ]
+        })
+        .populate({
+            path: 'habits._habit',
+            select: 'name'
+        })
 
     if (habitlistRecordOfWeek.length > 0) {
         for (let j = 0; j < habitlistRecordOfWeek.length; j++) {

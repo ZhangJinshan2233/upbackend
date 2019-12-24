@@ -16,9 +16,8 @@ const habitSchema = new Schema({
         type: String
     },
     daysOfWeek: {
-        type: Array,
+        type: [String],
         default: []
-
     },
     isObsolete: {
         type: Boolean,

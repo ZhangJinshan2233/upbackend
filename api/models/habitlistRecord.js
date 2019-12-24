@@ -13,8 +13,10 @@ const habitlistRecordSchema = new Schema({
         default: Date.now
     },
     habits: [{
-        name: {
-            type: String
+        _habit: {
+            type: Schema.Types.ObjectId,
+            ref: 'Habit',
+            required:true
         },
         status: {
             type: Boolean,
