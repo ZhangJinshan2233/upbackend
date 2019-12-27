@@ -15,7 +15,93 @@ const {
 } = require('mongoose');
 
 let update_current_habit_record = async (req, res) => {
+    let _coachee;
+    let {
+        _id
+    } = req.user;
+    let {
+        coachee
+    } = req.query
+    coachee == undefined || null ? _coachee = _id : _coachee = coachee
+    let daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    let {
+        startOfDay,
+        endOfDay
+    } = h.convert_time_to_localtime(req.body.createDate)
+    let currentDay = daysOfWeek[getDay(new Date(req.body.createDate))];
+    let habitsRecordOfScheduleDayPromise = HabitlistRecord
+        .findOne({
+            $and: [{
+                    _coachee
+                },
+                {
+                    createDate: {
+                        "$gte": startOfDay
+                    }
+                }, {
+                    createDate: {
+                        "$lte": endOfDay
+                    }
+                }
+            ]
+        })
+        .populate({
+            path: 'habits._habit',
+            select: 'name'
+        })
 
+    let habitsOfCurrentDayPromise = Habit
+        .find({
+            $and: [{
+                    _coachee: Types.ObjectId(_id)
+                }, {
+                    isObsolete: false
+                },
+                {
+                    daysOfWeek: currentDay
+                }
+            ]
+        })
+        .select('_id')
+
+    let [habitsOfCurrentDay, habitsRecordOfScheduleDay] = await Promise
+        .all([habitsOfCurrentDayPromise, habitsRecordOfScheduleDayPromise])
+
+    let habits = []
+
+    if (habitsOfCurrentDay.length > 0) {
+        if (habitsRecordOfScheduleDay.habits.length > 0) {
+            habits = habitsOfCurrentDay.reduce((acc, current) => {
+                let isChecked = false
+                for (let i in habitsRecordOfScheduleDay.habits) {
+                    if (current._id.toString() === habitsRecordOfScheduleDay.habits[i]._habit._id.toString()) {
+                        console.log(habitsRecordOfScheduleDay.habits[i].status)
+                        habitsRecordOfScheduleDay.habits[i].status ? isChecked = true : isChecked = false
+                    }
+                }
+                return [{
+                    _habit: current._id,
+                    status: isChecked
+                }, ...acc]
+            }, [])
+        } else {
+            habits = habitsOfCurrentDay.reduce((acc, current) => {
+                return [{
+                    _habit: current._id,
+                    status: false
+                }, ...acc]
+            }, [])
+        }
+    }
+
+    await HabitlistRecord.findByIdAndUpdate(habitsRecordOfScheduleDay._id, {
+        $set: {
+            habits: habits
+        }
+    })
+    res.status(200).json({
+        message: 'updated successfully'
+    })
 }
 /**
  * @function create new habit record;
@@ -70,23 +156,20 @@ let create_habit_record = async (req, res) => {
 
         if (habitsOfCurrentDay.length > 0) {
             habits = habitsOfCurrentDay.reduce((acc, current) => {
-                let {
-                    _id
-                } = current
                 return [...acc, {
-                    _habit: _id,
+                    _habit: current._id,
                     status: false
                 }]
             }, [])
         }
-        let newhabits = await HabitlistRecord
+        let newhabitRecord = await HabitlistRecord
             .create({
                 _coachee: Types.ObjectId(_id),
                 createDate: startOfDay,
                 habits
             })
         let habitsOfScheduleDay = await HabitlistRecord
-            .findById(newhabits._id)
+            .findById(newhabitRecord._id)
             .populate({
                 path: 'habits._habit',
                 select: 'name'
@@ -243,7 +326,7 @@ let get_habitlist_record_of_current_week = async (req, res) => {
  */
 let update_habit_status = async (req, res) => {
     let {
-        name,
+        habitId,
         status
     } = req.body
     let {
@@ -253,7 +336,7 @@ let update_habit_status = async (req, res) => {
         _id: habitlistId,
         habits: {
             "$elemMatch": {
-                name: name
+                _id:habitId
             }
         }
     }, {
@@ -269,5 +352,6 @@ module.exports = {
     create_habit_record,
     get_habitlist_record_of_day,
     update_habit_status,
+    update_current_habit_record,
     get_habitlist_record_of_current_week
 }

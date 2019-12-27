@@ -14,6 +14,12 @@ Router
     }), habitlistRecordController.get_habitlist_record_of_day)
 
 Router
+    .route('/updateTodayHabits')
+    .put(passport.authenticate('jwt', {
+        session: false
+    }), habitlistRecordController.update_current_habit_record)
+
+Router
     .route('/search/week/:coacheeId')
     .get(habitlistRecordController.get_habitlist_record_of_current_week)
 

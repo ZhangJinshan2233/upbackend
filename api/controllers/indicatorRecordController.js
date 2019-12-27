@@ -75,6 +75,7 @@ let create_indicator_record = async (req, res) => {
     let fullPropertiesRecord = await IndicatorRecord.findById(record._id)
 
     let newIndicatorRecord = {
+        _id:fullPropertiesRecord._id,
         name: fullPropertiesRecord._indicator.name,
         group: fullPropertiesRecord._indicator.group,
         value: fullPropertiesRecord.value,
@@ -316,7 +317,7 @@ let get_latest_record_of_all_indicators = async (req, res) => {
             value: '',
             status: "Normal",
             unit: item.unit,
-            createDate: "",
+            createDate: ""
         }
         virtualIndicatorRecords.push(virtualIndicatorRecord)
     })
@@ -370,9 +371,10 @@ let get_record_by_name_and_pagination = async (req, res) => {
         .sort({
             createDate: -1
         })
-        .skip(skipNum * recordSize)
+        .skip(skipNum)
         .limit(recordSize)
         .populate('_indicator', 'name group unit')
+
 
     let selectedFieldsOfIndicatorRecords = onePageRecords.reduce((acc, record) => {
         let newIndicatorRecord = {
@@ -431,7 +433,7 @@ let find_latest_record_by_indicator_name = async (req, res) => {
     if (!_coachee) throw Error("no coachee id")
     let _indicator = await Indicator.findOne({
         name
-    }).select('_id')
+    })
 
     let record = await IndicatorRecord.findOne({
             $and: [{
@@ -459,6 +461,15 @@ let find_latest_record_by_indicator_name = async (req, res) => {
             status: "Normal",
             createDate: record.createDate,
         }
+    }else{
+       indicatorRecord={
+        name: _indicator.name,
+        group: _indicator.group,
+        value: '',
+        status: "Normal",
+        unit:_indicator.unit,
+        createDate: ""
+       }
     }
 
     res.status(200).json({
