@@ -41,8 +41,7 @@ const coachSchema = new Schema({
         required: true
     },
     dateOfBirth: {
-        type: Date,
-        required: true
+        type: Date
     },
     phoneNumber: {
         type: Number,
@@ -82,6 +81,7 @@ coachSchema.methods.comparePassword = async function (candidatePassword) {
 const Coach = model('Coach', coachSchema);
 
 const CommonCoach = Coach.discriminator('CommonCoach', new Schema({
+    
     specialities: [{
         _id: false,
        _speciality:{

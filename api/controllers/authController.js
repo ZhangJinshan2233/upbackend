@@ -1,6 +1,7 @@
 'use strict'
 const {
     Coach,
+    AdminCoach,
     CommonCoach,
     Coachee,
     MemberRecord
@@ -50,7 +51,7 @@ let signin = async (req, res) => {
                 status: true
             }]
         })
-
+console.log(coach)
     }
     currentUser = coachee ? coachee : coach;
 
@@ -153,12 +154,16 @@ let get_whole_userInfo = async (req, res, next) => {
             ...theRestOfPropertiesCoachee
         }
     } else {
-
-        //if have some special property need use model which have this property
-        let coach = await CommonCoach.findById(_id).populate({
-            path: 'specialities._speciality',
-            select: 'name'
-        })
+        let coach = {}
+        if (userType == 'CommonCoach') {
+            //if have some special property need use model which have this property
+            coach = await CommonCoach.findById(_id).populate({
+                path: 'specialities._speciality',
+                select: 'name'
+            })
+        } else {
+            coach = await AdminCoach.findById(_id)
+        }
         //prevent theRestOfPropertiesCoach passing parent class of coach object
         let deserializationCoach = JSON.parse(JSON.stringify(coach))
         let {
@@ -173,6 +178,7 @@ let get_whole_userInfo = async (req, res, next) => {
             imgData: coachImgData,
             ...theRestOfPropertiesCoach
         }
+
     }
     return res.status(200).json({
         currentUser

@@ -2,15 +2,13 @@ const {
     Coach,
     Coachee,
     CommonCoach,
-    AdminCoach,
     UnreadNotification,
     Indicator,
-    Habit,
     HabitlistRecord,
     IndicatorRecord,
     MemberRecord
 } = require('../models')
-
+const Model = require('../models')
 const {
     get_week_habitlist,
     convert_time_to_localtime
@@ -36,13 +34,14 @@ let signup = async (req, res) => {
     let {
         email,
         imgData,
+        userType,
         ...remainingProperties
     } = req.body
-
     let newCoach = {};
     let bufferImgData = null;
 
-    let userType = req.query.userType || "CommonCoach"
+   let type=userType ||"CommonCoach"
+
     if (!email)
         throw Error('You need to input required information')
     try {
@@ -55,7 +54,6 @@ let signup = async (req, res) => {
         });
 
         let coachAndCoachee = await Promise.all([coachPromise, coacheePromise])
-
         coach = coachAndCoachee[0];
 
         coachee = coachAndCoachee[1];
@@ -64,21 +62,11 @@ let signup = async (req, res) => {
         if (imgData) {
             bufferImgData = Buffer.from(imgData, 'base64')
         }
-
-        if (userType === "CommonCoach") {
-            newCoach = await CommonCoach.create({
-                email,
-                imgData: bufferImgData,
-                ...remainingProperties
-            })
-        } else {
-            newCoach = await AdminCoach.create({
-                email,
-                imgData: bufferImgData,
-                ...remainingProperties
-            })
-        }
-
+        newCoach = await Model[type].create({
+            email,
+            imgData: bufferImgData,
+            ...remainingProperties
+        })
 
         return res.status(200).json({
             newCoach
@@ -469,8 +457,10 @@ let get_coach_total_numbers = async (req, res) => {
 
     let numCoaches = 0
     try {
-        let Coaches = await CommonCoach.find({userType:'CommonCoach'})
-        numCoaches=Coaches.length
+        let Coaches = await CommonCoach.find({
+            userType: 'CommonCoach'
+        })
+        numCoaches = Coaches.length
     } catch (error) {
         throw new Error('internal error')
     }
@@ -491,10 +481,12 @@ let update_coach = async (req, res) => {
         imgData,
         ...otherProperties
     } = req.body
-   if(otherProperties.hasOwnProperty('status')){
-     let coachee=await Coachee.findOne({_coach:_id})
-     if(coachee) throw Error('please transfer coachees under this coach')
-   }
+    if (otherProperties.hasOwnProperty('status')) {
+        let coachee = await Coachee.findOne({
+            _coach: _id
+        })
+        if (coachee) throw Error('please transfer coachees under this coach')
+    }
     let bufferImgData = null
     if (imgData) {
         bufferImgData = Buffer.from(imgData, 'base64')
