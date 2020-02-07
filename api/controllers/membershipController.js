@@ -5,56 +5,105 @@ const {
     Coachee
 } = require('../models')
 
-/**
- * create new challenge record
- * @param {_challenge,value,createDate} req 
- * @param {*} res 
- */
-let create_membership = async (req, res) => {
-    let {
-        membershipCategory: _membershipCategory,
-        coachees,
-        coach: _coach
-    } = req.body
-    let memberCategory = await MembershipCategory.findById(_membershipCategory)
-    if (!_membershipCategory || !coachees.length || !_coach)
-        throw Error('less information');
-    for (let _coachee of coachees) {
-        let coachee = await Coachee.findById(_coachee).select('_id _coach isMember userType')
-        let newMembership = await Membership.create({
-            endDate: addDays(Date.now(), memberCategory.duration),
-            _coachee: coachee._id,
-            _membershipCategory: memberCategory._id
-        })
-        if (!newMembership) throw Error('failed to register')
-
-        let memberRecord = await MemberRecord.create({
-            _coachee: coachee._id,
-            _membership: newMembership._id,
-            expireAt: addDays(new Date(), memberCategory.duration)
-        })
-        await Coachee.findByIdAndUpdate(_coachee, {
-            $set: {
-                _coach,
-                isMember: true
-            }
-        })
-        if (!newMembership) throw Error('created membership unsuccessfully')
-    }
-    res.status(201).json({
-        message: "created successfully"
-    })
-}
 
 /**
- * get latest record of all challenges
+ * get all memberships 
  * @param {*} req 
  * @param {*} res 
  */
-let get_membership_by_coachee = async (req, res) => {
+let get_memberships = async (req, res) => {
+    let queryParams = req.query
+    let filter = ""
+    let pageSize = 3
+    let numSort = -1
+    let memberships = []
+    let {
+        sortOrder
+    } = queryParams;
+    filter = queryParams.filter
+    numSort = sortOrder == 'asc' ? 1 : -1
+    pageSize = parseInt(queryParams.pageSize)
+    let pageNumber = parseInt(queryParams.pageNumber) || 0
 
+    try {
+        memberships = await Membership.aggregate([{
+                $lookup: {
+                    from: "coachees",
+                    localField: "_coachee",
+                    foreignField: "_id",
+                    as: "coachee"
+                }
+            },
+            {
+                $lookup: {
+                    from: "categories",
+                    localField: "_membershipCategory",
+                    foreignField: "_id",
+                    as: "membershipCategory"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$coachee"
+                },
+
+            },
+            {
+                $unwind: {
+                    path: "$membershipCategory"
+                },
+
+            },
+            {
+                $match: {
+                    'coachee.email': {
+                        $regex: filter
+                    }
+                }
+            },
+            {
+                $skip: (pageNumber * pageSize)
+            },
+            {
+                $limit: (pageSize)
+            },
+            {
+                $sort: {
+                    "createdDate":numSort
+                }
+            },
+            {
+                $project: {
+                    '_id': 1,
+                    'createdAt':1,
+                    'coachee.firstName': 1,
+                    'coachee.lastName': 1,
+                    'coachee.email': 1,
+                    'membershipCategory.duration': 1,
+                    'membershipCategory.name': 1
+                }
+            },
+
+        ])
+        res.status(200).json({
+            memberships
+        })
+    } catch (error) {
+        throw new Error('get memberships error')
+    }
+};
+
+/**
+ * get total membership numbers
+ */
+
+let get_membership_total_numbers = async (req, res) => {
+    let numMemberships = 0;
+    numMemberships = await Membership.estimatedDocumentCount()
+    res.status(200).json({
+        numMemberships
+    })
 }
-
 /**
  * create new comment 
  * @params {req.params}
@@ -62,5 +111,6 @@ let get_membership_by_coachee = async (req, res) => {
  * @returns string
  */
 module.exports = {
-    create_membership
+    get_memberships,
+    get_membership_total_numbers 
 }

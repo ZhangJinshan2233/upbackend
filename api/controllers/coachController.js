@@ -35,9 +35,14 @@ const {
 let signup = async (req, res) => {
     let {
         email,
+        imgData,
         ...remainingProperties
     } = req.body
-    let userType = req.query.userType || "coach"
+
+    let newCoach = {};
+    let bufferImgData = null;
+
+    let userType = req.query.userType || "CommonCoach"
     if (!email)
         throw Error('You need to input required information')
     try {
@@ -56,17 +61,20 @@ let signup = async (req, res) => {
         coachee = coachAndCoachee[1];
 
         if (coach || coachee) throw Error('email already existed');
+        if (imgData) {
+            bufferImgData = Buffer.from(imgData, 'base64')
+        }
 
-        let newCoach = {};
-
-        if (userType === "coach") {
+        if (userType === "CommonCoach") {
             newCoach = await CommonCoach.create({
                 email,
+                imgData: bufferImgData,
                 ...remainingProperties
             })
         } else {
             newCoach = await AdminCoach.create({
                 email,
+                imgData: bufferImgData,
                 ...remainingProperties
             })
         }
@@ -355,21 +363,37 @@ let get_coachee = async (req, res) => {
         ...theRestOfPropertiesCoachee
     }
     res.status(200).json({
-        coachee:currentUser
+        coachee: currentUser
     })
 }
 
 let get_coach = async (req, res) => {
+    let coach = {}
     let {
         coachId: _id
     } = req.params
-
-    let coach = await Coach.findById(_id)
-
-    if (!coach) throw Error('can not find coachee')
-
+    coach = await Coach.findById(_id)
+        .populate({
+            path: 'specialities._speciality',
+            select: 'name'
+        })
+    if (!coach) throw Error('can not find')
+    //prevent theRestOfPropertiesCoach passing parent class of coach object
+    let deserializationCoach = JSON.parse(JSON.stringify(coach))
+    let {
+        imgData,
+        ...theRestOfPropertiesCoach
+    } = deserializationCoach
+    let coachImgData = ""
+    if (imgData) {
+        coachImgData = Buffer.from(imgData).toString('base64')
+    }
+    currentCoach = {
+        imgData: coachImgData,
+        ...theRestOfPropertiesCoach
+    }
     res.status(200).json({
-        coach
+        coach: currentCoach
     })
 }
 let get_enrolled_and_expired_members = async (req, res) => {
@@ -408,10 +432,90 @@ let get_enrolled_and_expired_members = async (req, res) => {
         expiredNumber
     })
 }
+
+let get_coaches_pagination = async (req, res) => {
+    let queryParams = req.query
+    let {
+        sortOrder,
+        filter
+    } = queryParams;
+
+    let numSort = sortOrder == 'desc' ? -1 : 1
+    let pageSize = parseInt(queryParams.pageSize)
+    let pageNumber = parseInt(queryParams.pageNumber) || 0
+    let coaches = [];
+    try {
+        coaches = await CommonCoach
+            .find({
+                email: {
+                    $regex: filter
+                }
+            })
+            .sort({
+                'createdAt': numSort
+            })
+            .skip(pageSize * pageNumber)
+            .limit(pageSize)
+            .select('email firstName lastName status createdAt')
+    } catch (error) {
+        throw new Error('get coachees error')
+    }
+    res.status(200).json({
+        coaches
+    })
+}
+
+let get_coach_total_numbers = async (req, res) => {
+
+    let numCoaches = 0
+    try {
+        let Coaches = await CommonCoach.find({userType:'CommonCoach'})
+        numCoaches=Coaches.length
+    } catch (error) {
+        throw new Error('internal error')
+    }
+
+    res.status(200).json({
+        numCoaches
+    })
+
+}
+
+//coach admin update common coach
+let update_coach = async (req, res) => {
+    let {
+        coachId: _id
+    } = req.params
+    let coach = {}
+    let {
+        imgData,
+        ...otherProperties
+    } = req.body
+   if(otherProperties.hasOwnProperty('status')){
+     let coachee=await Coachee.findOne({_coach:_id})
+     if(coachee) throw Error('please transfer coachees under this coach')
+   }
+    let bufferImgData = null
+    if (imgData) {
+        bufferImgData = Buffer.from(imgData, 'base64')
+    }
+    coach = await CommonCoach.findByIdAndUpdate(_id, {
+        $set: {
+            imgData: bufferImgData,
+            ...otherProperties
+        }
+    })
+    res.status(200).json({
+        message: "updated successfully"
+    })
+}
 module.exports = {
     signup,
     get_coachees_pagination,
     get_coachee,
     get_coach,
-    get_enrolled_and_expired_members
+    get_enrolled_and_expired_members,
+    get_coaches_pagination,
+    get_coach_total_numbers,
+    update_coach
 }

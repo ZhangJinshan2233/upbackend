@@ -66,7 +66,7 @@ let remove_notifications = async (req, res) => {
         type
     } = req.query
 
-    await UnreadNotification.remove({
+    await UnreadNotification.deleteMany({
         $and: [{
             type
         }, {

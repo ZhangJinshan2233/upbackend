@@ -13,10 +13,10 @@ const MembershipCategory = Category.discriminator('MembershipCategory', new Sche
         required: true,
         default: 0
     },
-    type: {
-        type: String,
+    isFree: {
+        type: Boolean,
         required: true,
-        default: ''
+        default: false
     }
 }))
 

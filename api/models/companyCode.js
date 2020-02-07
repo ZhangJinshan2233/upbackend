@@ -8,20 +8,17 @@ companyCodeSchema = new Schema({
         type: String,
         required: true
     },
+    description: {
+        type: String,
+        default:""
+    },
     code: {
         type: String,
         required: true
     },
-    numberOfMembers:{
-        type:Number,
-        default:0
-    },
-    expireAt: {
-        type: Date,
-        default: Date.now,
-        index: {
-            expireAfterSeconds: 0
-        }
+    isObsolete: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: {

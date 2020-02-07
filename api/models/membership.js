@@ -11,14 +11,6 @@ membershipSchema = new Schema({
     _membershipCategory: {
         type: Schema.Types.ObjectId,
         ref: 'MembershipCategory'
-    },
-    startDate:{
-        type:Date,
-        default:Date.now
-    },
-    endDate:{
-        type:Date,
-        default:Date.now
     }
 },{
     timestamps:{

@@ -18,12 +18,11 @@ const categorySchema = new Schema({
     isObsolete: {
         type: Boolean,
         default: false
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
     }
-}, options, {
-    timestamps: {
-        createdAt: 'createdAt',
-        updatedAt: 'updatedAt'
-    }
-})
+}, options)
 
 module.exports=model('Category',categorySchema)

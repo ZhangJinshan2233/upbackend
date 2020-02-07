@@ -10,7 +10,10 @@ const {
 const {
     Types
 } = require('mongoose');
-const {convertBase64ToBuffer,convertBufferToBase64}=require('../helpers')
+const {
+    convertBase64ToBuffer,
+    convertBufferToBase64
+} = require('../helpers')
 /**
  * create new challenge record
  * @param {_challenge,value,createDate} req 
@@ -26,7 +29,7 @@ let create_challenge = async (req, res) => {
         endDate
     } = req.body
 
-    let newChallenge = await Challenge.create({
+    let newChallengePromise = Challenge.create({
         _coachee,
         _challengeCategory,
         startDate: new Date(startDate),
@@ -34,8 +37,9 @@ let create_challenge = async (req, res) => {
 
     })
 
-    let challengeCategory = await ChallengeCategory.findById(_challengeCategory)
+    let challengeCategoryPromise =  ChallengeCategory.findById(_challengeCategory)
 
+    let [newChallenge,challengeCategory]=await Promise.all([newChallengePromise,challengeCategoryPromise])
     let image = `data:${challengeCategory.imgType};base64,` + Buffer.from(challengeCategory.imgData).toString('base64');
 
     let activeChallenge = {
@@ -198,11 +202,13 @@ let get_foodjournalposts_pagination_by_challengeId = async (req, res) => {
             $match: {
                 _id: Types.ObjectId(challengeId)
             }
-        }, {
+        },
+        {
             $unwind: {
                 path: "$posts"
             }
-        }, {
+        },
+        {
             $lookup: {
                 from: "foodjournalposts",
                 localField: "posts._post",
@@ -341,13 +347,15 @@ let create_new_comment = async (req, res) => {
                 comments: newComment
             }
         })
-        post = await FoodJournalPost.findById(Types.ObjectId(postId)).select({
-            comments: {
-                "$elemMatch": {
-                    createDate: newComment.createDate
+        post = await FoodJournalPost
+            .findById(Types.ObjectId(postId))
+            .select({
+                comments: {
+                    "$elemMatch": {
+                        createDate: newComment.createDate
+                    }
                 }
-            }
-        })
+            })
         let image = null
         let sender = {
             firstName: "",

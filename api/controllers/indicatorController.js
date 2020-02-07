@@ -1,5 +1,7 @@
 'use strict'
-const {Indicator} = require('../models')
+const {
+    Indicator
+} = require('../models')
 /**
  * create new indicator
  * @param {name, groupName, unit,isObsolete:false} req 
@@ -21,7 +23,7 @@ let create_indicator = async (req, res) => {
     let newIndicator = await Indicator.create(req.body)
     if (!newIndicator) throw Error('created unscressfully')
     res.status(201).json({
-        newIndicator
+        message:"add successfully"
     })
 };
 
@@ -31,21 +33,38 @@ let create_indicator = async (req, res) => {
  * @param {*} res 
  */
 let get_indicators = async (req, res) => {
+    let queryParams = req.query
+    let filter = ""
+    let pageSize = 3
+    let numSort = -1
     let indicators = []
     let {
-        name
-    } = req.query
-    if (name) {
-        indicators = await Indicator.find({
-            name: name
+        sortOrder
+    } = queryParams;
+    filter = queryParams.filter
+    numSort = sortOrder == 'asc' ? 1 : -1
+    pageSize = parseInt(queryParams.pageSize)
+    let pageNumber = parseInt(queryParams.pageNumber) || 0
+    try {
+        indicators = await Indicator
+            .find({
+                name: {
+                    $regex: filter
+                }
+            })
+            .sort({
+                'group': numSort
+            })
+            .skip(pageNumber * pageSize)
+            .limit(pageSize)
+        res.status(200).json({
+            indicators
         })
-    } else {
-        indicators = await Indicator.find()
+    } catch (error) {
+        throw new Error('get healthytips error')
     }
 
-    res.status(200).json({
-        indicators
-    })
+
 };
 
 /**
@@ -60,7 +79,7 @@ let update_indicator = async (req, res) => {
     } = req.params;
     let updatedStatus = await Indicator.findByIdAndUpdate(indicatorId, {
         $set: req.body
-    }).exec()
+    })
 
     if (updatedStatus.n < 0) throw Error('updated unsuccessfully')
     res.status(200).json({
@@ -84,10 +103,22 @@ let get_indicator_by_indicator_id = async (req, res) => {
     })
 }
 
+/**
+ * get total indicator numbers
+ */
+
+let get_indicator_total_numbers = async (req, res) => {
+    let numIndicators = 0;
+    numIndicators = await Indicator.estimatedDocumentCount()
+    res.status(200).json({
+        numIndicators
+    })
+}
 
 module.exports = {
     create_indicator,
     get_indicators,
     update_indicator,
-    get_indicator_by_indicator_id
+    get_indicator_by_indicator_id,
+    get_indicator_total_numbers
 }

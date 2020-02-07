@@ -8,10 +8,12 @@ memberRecordSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Coachee'
     },
-    _membership: {
-        type: Schema.Types.ObjectId,
-        ref: 'MemberShip'
-    },
+    memberships:[{
+        _membership:{
+            type:Schema.Types.ObjectId,
+            ref:'Membership'
+        }
+    }],
     expireAt: {
         type: Date,
         default: Date.now,

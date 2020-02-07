@@ -11,6 +11,10 @@ const HealthyTipSchema = new Schema({
     description: {
         type: String
     },
+    grade:{
+        type:Number,
+        default:0
+    },
     imgType: {
         type: String,
         default: 'image/jpeg'

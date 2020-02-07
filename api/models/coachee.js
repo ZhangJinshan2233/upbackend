@@ -21,8 +21,9 @@ const coacheeSchema = new Schema({
         default: null,
     },
     group:{
-        type:String,
-        default:"individual"
+        type: Schema.Types.ObjectId,
+        ref: 'CompanyCode',
+        default: null,
     },
     firstName: {
         type: String,

@@ -8,6 +8,16 @@ Router
     .route('')
     .post(categoryController.create_category)
     .get(categoryController.get_categories)
+Router
+    .route('/count')
+    .get(categoryController.get_categories_total_numbers)
+Router
+    .route('/kind')
+    .get(categoryController.get_categories_by_kind)
+    
+Router
+    .route('/distinctKind')
+    .get(categoryController.get_kinds)
 
 Router
     .route('/:categoryId')

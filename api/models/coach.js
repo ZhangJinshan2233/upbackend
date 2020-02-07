@@ -36,12 +36,27 @@ const coachSchema = new Schema({
         type: String,
         required: true
     },
-}, baseOptions, {
-    timestamps: {
-        createdAt: 'createdAt',
-        updatedAt: 'updatedAt'
+    gender: {
+        type: String,
+        required: true
+    },
+    dateOfBirth: {
+        type: Date,
+        required: true
+    },
+    phoneNumber: {
+        type: Number,
+        required: true
+    },
+    status: {
+        type: Boolean,
+        default: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
     }
-})
+}, baseOptions)
 coachSchema.pre('save', function (next) {
     var coach = this;
     if (!coach.isModified('password')) return next(err);
@@ -69,7 +84,11 @@ const Coach = model('Coach', coachSchema);
 const CommonCoach = Coach.discriminator('CommonCoach', new Schema({
     specialities: [{
         _id: false,
-        speciality: String
+       _speciality:{
+        type: Schema.Types.ObjectId,
+        ref: 'SpecialityCategory',
+        default: null,
+       }
     }],
     coachees: [{
         _id: false,

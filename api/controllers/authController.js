@@ -1,6 +1,7 @@
 'use strict'
 const {
     Coach,
+    CommonCoach,
     Coachee,
     MemberRecord
 } = require('../models');
@@ -41,8 +42,13 @@ let signin = async (req, res) => {
 
     }
     if (!coachee) {
+        //prevent unavailable coach from logging in
         coach = await Coach.findOne({
-            email: email
+            $and: [{
+                email: email
+            }, {
+                status: true
+            }]
         })
 
     }
@@ -53,12 +59,14 @@ let signin = async (req, res) => {
     isMatch = await currentUser.comparePassword(password);
 
     if (!isMatch) throw Error('The user ID and password don\'t match.');
+    if (currentUser.userType === 'Coachee') {
+        await currentUser.updateOne({
+            $set: {
+                lastTimeLogin: Date.now()
+            }
+        }).exec()
+    }
 
-    await currentUser.updateOne({
-        $set: {
-            lastTimeLogin: Date.now()
-        }
-    }).exec()
     return res.status(200).json({
         access_token: helpers.create_token(currentUser)
     });
@@ -97,7 +105,7 @@ let forgot_password = async (req, res) => {
     let subjectData = "Reset password";
     let htmlData =
         "<html>Hey " + currentUser.firstName +
-        ",<br/><br/> We've glad to have changed your password to " + "<p style='color:red'>" +randPassword +"</p>" +
+        ",<br/><br/> We've glad to have changed your password to " + "<p style='color:red'>" + randPassword + "</p>" +
         " so that you're able to login and connect with your UP Community soon!<br/><br/>You may change the password again if you like in your Settings page in our app.<br/><br/><Table><TR ALIGN='Left'><TD><a href='http://www.uphealth.sg'><img src='http://user-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/88884/145502_842983.png' height='150' alt='UP logo'></a></TD><TD>Cheering you on,<br>UP Welcome Team <br>T: (+65) 6743 4010<br>W: uphealth.sg <br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
     h.send_email(email, subjectData, htmlData);
     res.status(200).json({
@@ -106,7 +114,7 @@ let forgot_password = async (req, res) => {
 }
 
 /**
- * get whole info (this function can get coach and coachee info)
+ * get whole info (this function can get common coach and coachee info)
  * @function get_whole_userInfo
  * @return JSON object
  */
@@ -120,7 +128,7 @@ let get_whole_userInfo = async (req, res, next) => {
         let coachee = await Coachee.findById(_id)
             .populate('_coach', '_id firstName lastName imgType imgData')
         let deserializationCoachee = JSON.parse(JSON.stringify(coachee))
-        
+
         let {
             imgData: coacheeImgData,
             _coach,
@@ -146,7 +154,11 @@ let get_whole_userInfo = async (req, res, next) => {
         }
     } else {
 
-        let coach = await Coach.findById(_id)
+        //if have some special property need use model which have this property
+        let coach = await CommonCoach.findById(_id).populate({
+            path: 'specialities._speciality',
+            select: 'name'
+        })
         //prevent theRestOfPropertiesCoach passing parent class of coach object
         let deserializationCoach = JSON.parse(JSON.stringify(coach))
         let {
@@ -214,6 +226,7 @@ let change_password = async (req, res) => {
 };
 
 /**
+ *coachee and common coach self update  profile
  * @function update profile
  * @param {profile Info}
  */
@@ -227,7 +240,7 @@ let update_profile_field = async (req, res) => {
     if (userType === 'Coachee') {
         currentUser = await Coachee.findById(_id)
     } else {
-        currentUser = await Coach.findById(_id)
+        currentUser = await CommonCoach.findById(_id)
     }
     if (Object.keys(req.body).includes('imgData')) {
         let {

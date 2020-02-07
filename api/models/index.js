@@ -22,7 +22,8 @@ const MemberRecord = require('./memberRcord');
 const CompanyCode=require('./companyCode');
 const AppCategory=require('./appCategory')
 const Category=require('./category');
-const Note=require('./note')
+const Note=require('./note');
+const SpecialityCategory=require('./specialityCategory')
 //fix deprecation warnings
 mongoose.set('useFindAndModify', false);
 mongoose.set("useUnifiedTopology", true);
@@ -65,5 +66,6 @@ module.exports = {
     HealthyTip,
     MemberRecord,
     CompanyCode,
-    Note
+    Note,
+    SpecialityCategory
 }
