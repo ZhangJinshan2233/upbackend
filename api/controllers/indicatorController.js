@@ -23,7 +23,7 @@ let create_indicator = async (req, res) => {
     let newIndicator = await Indicator.create(req.body)
     if (!newIndicator) throw Error('created unscressfully')
     res.status(201).json({
-        message:"add successfully"
+        message: "add successfully"
     })
 };
 
@@ -38,13 +38,19 @@ let get_indicators = async (req, res) => {
     let pageSize = 3
     let numSort = -1
     let indicators = []
-    let {
-        sortOrder
-    } = queryParams;
-    filter = queryParams.filter
-    numSort = sortOrder == 'asc' ? 1 : -1
-    pageSize = parseInt(queryParams.pageSize)
-    let pageNumber = parseInt(queryParams.pageNumber) || 0
+    let pageNumber=0
+    
+    if (queryParams.hasOwnProperty('name')) {
+        filter = queryParams.name
+    } else {
+        let {
+            sortOrder
+        } = queryParams;
+        filter = queryParams.filter
+        numSort = sortOrder == 'asc' ? 1 : -1
+        pageSize = parseInt(queryParams.pageSize)
+        pageNumber = parseInt(queryParams.pageNumber)
+    }
     try {
         indicators = await Indicator
             .find({
@@ -61,7 +67,7 @@ let get_indicators = async (req, res) => {
             indicators
         })
     } catch (error) {
-        throw new Error('get healthytips error')
+        throw new Error('get indicators error')
     }
 
 
