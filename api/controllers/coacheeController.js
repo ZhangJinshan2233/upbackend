@@ -59,7 +59,7 @@ let signup = async (req, res) => {
 
     let weightIndicatorPromise = Indicator
         .findOne({
-            name: 'weight'
+            name: 'Weight'
         })
         .select('_id');
 
@@ -122,7 +122,7 @@ let signup = async (req, res) => {
     let htmlData =
         "<html>Hey " + firstName + ",<br/><br/>" + emailContent + "<br/><br/><Table><TR ALIGN='Left'><TD><a href='http://www.uphealth.sg'><img src='http://user-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/88884/145502_842983.png' height='150' alt='UP logo'></a></TD><TD>Cheering you on,<br>UP Welcome Team <br>T: (+65) 6743 4010<br>W: uphealth.sg <br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
     if (newUser)
-        h.send_email(email, subjectData, htmlData);
+        h.send_welcome_email(email, subjectData, htmlData);
     return res.status(200).json({
         newUser
     })
@@ -311,8 +311,6 @@ let get_coachees_pagination = async (req, res) => {
         filterValue,
         filterField,
     } = queryParams;
-    let field = '';
-    
     switch (true) {
         case (filterField == 'coach'):
             field = 'coach.email';
@@ -327,7 +325,9 @@ let get_coachees_pagination = async (req, res) => {
             field = 'email'
             break
     }
-    console.log(field)
+    if(!sortField){
+        sortField='email'
+    }
     let numSort = sortOrder == 'desc' ? -1 : 1
     let pageSize = parseInt(queryParams.pageSize)
     let pageNumber = parseInt(queryParams.pageNumber) || 0

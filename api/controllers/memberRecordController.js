@@ -78,14 +78,12 @@ let get_member_record_by_coachee = async (req, res) => {
     let {
         coacheeId
     } = req.query
-    let isMember = true
-    let memberRecord = await MemberRecord.findOne({
+    let memberRecord =null
+    memberRecord = await MemberRecord.findOne({
         _coachee: Types.ObjectId(coacheeId)
-    })
-    if (!memberRecord) isMember = false
-
+    }).select('expireAt')
     res.status(200).json({
-        isMember
+        memberRecord
     })
 }
 

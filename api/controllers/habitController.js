@@ -30,7 +30,7 @@ let get_habits = async (req, res) => {
         }, {
             isObsolete: false
         }]
-    })
+    }).sort({createdAt:1})
 
     res.status(200).json({
         habits: habits

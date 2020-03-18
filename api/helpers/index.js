@@ -33,6 +33,29 @@ let create_token = (user) => {
             expiresIn: 15000
         })
 }
+
+let organize_email = async (user, pass, fromEmail, toEmail, subjectData, htmlData) => {
+    let transporter = nodemailer.createTransport({
+        host: config.emailHost,
+        port: config.emailPort,
+        secure: false,
+        auth: {
+            user: process.env.MAILJET_API_KEY || user,
+            pass: process.env.MAILJET_API_SECRET || pass
+        }
+    });
+    try {
+        let info = await transporter.sendMail({
+            from: fromEmail,
+            to: toEmail,
+            subject: subjectData,
+            html: htmlData,
+        })
+        console.log(info)
+    } catch (error) {
+        console.log(error)
+    }
+}
 /**
  * @function send mail
  * @param {*} toEmail 
@@ -40,29 +63,23 @@ let create_token = (user) => {
  * @param {*} htmlData 
  * @returns 
  */
-let send_email = async (toEmail, subjectData, htmlData) => {
-
-    let transporter = nodemailer.createTransport({
-        host: config.emailHost,
-        port: config.emailPort,
-        secure: false,
-        auth: {
-            user: process.env.MAILJET_API_KEY || config.emailAuth.user,
-            pass: process.env.MAILJET_API_SECRET || config.emailAuth.pass
-        }
-    });
-    try {
-        let info = await transporter.sendMail({
-            from: config.supportEmail,
-            to: toEmail,
-            subject: subjectData,
-            html: htmlData,
-        })
-    } catch (error) {
-        console.log(error)
-    }
-
+let send_welcome_email = (toEmail, subjectData, htmlData) => {
+    organize_email(config.welcomeEmailAuth.user,
+        config.welcomeEmailAuth.pass,
+        config.welcomeEmail,
+        toEmail,
+        subjectData,
+        htmlData)
 };
+let send_support_email = async (toEmail, subjectData, htmlData) => {
+    organize_email(config.supportEmailAuth.user,
+        config.supportEmailAuth.pass,
+        config.supportEmail,
+        toEmail,
+        subjectData,
+        htmlData)
+};
+
 
 /**
  * convert time to local time
@@ -241,8 +258,9 @@ let convertBufferToBase64 = (imgData) => {
     return base64ImgData
 }
 module.exports = {
+    send_welcome_email,
     create_token,
-    send_email,
+    send_support_email,
     convert_time_to_localtime,
     errorHandler,
     membershipEndDateObject,

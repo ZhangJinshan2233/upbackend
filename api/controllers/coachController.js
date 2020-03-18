@@ -90,7 +90,7 @@ let get_coachees_pagination = async (req, res) => {
     let coachees = []
     let _indicator = null
     let _indicatorPromise = Indicator.findOne({
-        name: "weight"
+        name: "Weight"
     }).select('_id').exec()
 
     let daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
