@@ -23,7 +23,9 @@ const {
 const {
     Types
 } = require('mongoose');
-
+const {
+    UserFacingError
+} = require('../middlewares').errorHandler
 /**
  * @function signup.
  * @public
@@ -40,10 +42,10 @@ let signup = async (req, res) => {
     let newCoach = {};
     let bufferImgData = null;
 
-   let type=userType ||"CommonCoach"
+    let type = userType || "CommonCoach"
 
     if (!email)
-        throw Error('You need to input required information')
+        throw new UserFacingError('You need to input required information')
     try {
         let coacheePromise = Coachee.findOne({
             email: email
@@ -58,7 +60,7 @@ let signup = async (req, res) => {
 
         coachee = coachAndCoachee[1];
 
-        if (coach || coachee) throw Error('email already existed');
+        if (coach || coachee) throw new UserFacingError('email already existed');
         if (imgData) {
             bufferImgData = Buffer.from(imgData, 'base64')
         }
@@ -462,7 +464,7 @@ let get_coach_total_numbers = async (req, res) => {
         })
         numCoaches = Coaches.length
     } catch (error) {
-        throw new Error('internal error')
+        throw error
     }
 
     res.status(200).json({

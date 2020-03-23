@@ -3,23 +3,17 @@ const {
     Coach,
     HabitCategory,
     Habit,
-    MembershipCategory,
-    Membership,
     MemberRecord,
     CompanyCode,
     IndicatorRecord,
     Indicator
 } = require('../models');
-const {
-    addDays
-} = require('date-fns');
-
-const h = require('../helpers');
-
+const _h = require('../helpers');
 const _ = require('lodash');
 const {
     Types
 } = require('mongoose')
+const {UserFacingError} = require('../middlewares').errorHandler
 /**
  * @function register
  * @public
@@ -49,8 +43,10 @@ let signup = async (req, res) => {
     let companyInfo = await CompanyCode.findOne({
         code
     });
-    if (!companyInfo) throw Error('company code does not exist')
+
+    if (!companyInfo) throw new UserFacingError('company code does not exist')
     group = companyInfo._id;
+    
     let systyemCoachPromise = Coach
         .findOne({
             email: 'support@uphealth.sg'
@@ -70,9 +66,9 @@ let signup = async (req, res) => {
         weightIndicatorPromise
     ])
 
-    if (coach || coachee) throw Error('Email already existed');
+    if (coach || coachee) throw new UserFacingError('Email already existed');
 
-    let newUserPromise = Coachee.create({
+    let newUser = await Coachee.create({
         _coach: systyemCoach._id,
         group,
         email,
@@ -81,27 +77,28 @@ let signup = async (req, res) => {
         ...otherProperties
     });
 
-    let memberCategoryPromise = MembershipCategory.findOne({
-        name: 'Trial'
-    })
-    let newUserAndMemberCategory = await Promise.all([newUserPromise, memberCategoryPromise])
-    let newUser = newUserAndMemberCategory[0];
-    let memberCategory = newUserAndMemberCategory[1]
-    if (!newUser) throw Error('created unsuccessfully')
-    let newMembership = await Membership.create({
-        _coachee: newUser._id,
-        _membershipCategory: memberCategory._id
-    });
+    // let memberCategoryPromise = MembershipCategory.findOne({
+    //     name: 'Trial'
+    // })
+    // let newUserAndMemberCategory = await Promise.all([newUserPromise, memberCategoryPromise])
+    // let newUser = newUserAndMemberCategory[0];
+    // let memberCategory = newUserAndMemberCategory[1]
+    // if (!newUser) throw Error('created unsuccessfully')
+    // let newMembership = await Membership.create({
+    //     _coachee: newUser._id,
+    //     _membershipCategory: memberCategory._id
+    // });
 
-    if (!newMembership) throw Error('failed to register');
+    // if (!newMembership) throw Error('failed to register');
 
-    let memberRecord = await MemberRecord.create({
-        _coachee: newUser._id,
-        memberships: [{
-            _membership: newMembership._id
-        }],
-        expireAt: addDays(new Date(), memberCategory.duration)
-    })
+    // let memberRecord = await MemberRecord.create({
+    //     _coachee: newUser._id,
+    //     memberships: [{
+    //         _membership: newMembership._id
+    //     }],
+    //     expireAt: addDays(new Date(), memberCategory.duration)
+    // })
+    // if (!memberRecord) throw Error('failed to register');
 
     await IndicatorRecord.create({
         _coachee: newUser._id,
@@ -109,7 +106,6 @@ let signup = async (req, res) => {
         _indicator: weightIndicator._id,
         createDate: new Date()
     })
-    if (!memberRecord) throw Error('failed to register');
 
     let emailContent = "Welcome to the UP Health community. " +
         "You'll find no where like this where great place where" +
@@ -122,7 +118,7 @@ let signup = async (req, res) => {
     let htmlData =
         "<html>Hey " + firstName + ",<br/><br/>" + emailContent + "<br/><br/><Table><TR ALIGN='Left'><TD><a href='http://www.uphealth.sg'><img src='http://user-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/88884/145502_842983.png' height='150' alt='UP logo'></a></TD><TD>Cheering you on,<br>UP Welcome Team <br>T: (+65) 6743 4010<br>W: uphealth.sg <br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
     if (newUser)
-        h.send_welcome_email(email, subjectData, htmlData);
+        _h.send_welcome_email(email, subjectData, htmlData);
     return res.status(200).json({
         newUser
     })
@@ -325,8 +321,8 @@ let get_coachees_pagination = async (req, res) => {
             field = 'email'
             break
     }
-    if(!sortField){
-        sortField='email'
+    if (!sortField) {
+        sortField = 'email'
     }
     let numSort = sortOrder == 'desc' ? -1 : 1
     let pageSize = parseInt(queryParams.pageSize)
@@ -464,7 +460,7 @@ let assign_coach = async (req, res) => {
         coachees,
         coachId
     } = req.body
-    if (!coachees.length) throw Error('please selected coachee')
+    if (!coachees.length) throw new UserFacingError('please selected coachee')
     let coacheeUpdatePromises = []
     let coach = await Coach.findById(Types.ObjectId(coachId))
     if (!coach) throw Error('can not find coach')
@@ -488,10 +484,10 @@ let assign_group = async (req, res) => {
         coachees,
         companyCodeId
     } = req.body
-    if (!coachees.length) throw Error('please selected coachee')
+    if (!coachees.length) throw new Error('please selected coachee')
     let coacheeUpdatePromises = []
     let companyCode = await CompanyCode.findById(Types.ObjectId(companyCodeId))
-    if (!companyCode) throw Error('can not find coach')
+    if (!companyCode) throw new Error('can not find coach')
     for (let coachee of coachees) {
         let coacheeUpdatePromise = Coachee.findByIdAndUpdate(coachee, {
             $set: {
@@ -501,7 +497,7 @@ let assign_group = async (req, res) => {
         coacheeUpdatePromises.push(coacheeUpdatePromise)
     }
     let coacheesResult = await Promise.all(coacheeUpdatePromises)
-    if (coacheesResult.length < 0) throw Error('assign unsuccessfully')
+    if (coacheesResult.length < 0) throw new UserFacingError('assign unsuccessfully')
     res.status(200).json({
         message: "assign successfully"
     })

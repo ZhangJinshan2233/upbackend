@@ -11,6 +11,7 @@ const {
 const {
     addDays
 } = require('date-fns')
+const {UserFacingError} = require('../middlewares').errorHandler
 /**
  * create new challenge record
  * @param {_challenge,value,createDate} req 
@@ -23,7 +24,7 @@ let create_member_record = async (req, res) => {
     } = req.body
     console.log(req.body)
     if (!membershipCategory || !coachees.length)
-        throw Error('less information');
+        throw new UserFacingError('less information');
     let assignMembershipPromises = []
     let memberCategory = await MembershipCategory.findById(membershipCategory)
     for (let _coachee of coachees) {

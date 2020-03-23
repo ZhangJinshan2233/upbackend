@@ -6,10 +6,10 @@ const {
     Coachee,
     MemberRecord
 } = require('../models');
-const helpers = require('../helpers');
+const _h = require('../helpers');
 const bcrypt = require('bcrypt');
 const randToken = require('rand-token');
-const h = require('../helpers')
+const {UserFacingError} = require('../middlewares/index').errorHandler
 /**
  * @function signin.
  * @public
@@ -51,15 +51,14 @@ let signin = async (req, res) => {
                 status: true
             }]
         })
-console.log(coach)
     }
     currentUser = coachee ? coachee : coach;
 
-    if (!currentUser) throw new Error('Non-existed user');
+    if (!currentUser) throw new UserFacingError('Non-existed user');
 
     isMatch = await currentUser.comparePassword(password);
 
-    if (!isMatch) throw Error('The user ID and password don\'t match.');
+    if (!isMatch) throw new UserFacingError('The user ID and password don\'t match.');
     if (currentUser.userType === 'Coachee') {
         await currentUser.updateOne({
             $set: {
@@ -69,7 +68,7 @@ console.log(coach)
     }
 
     return res.status(200).json({
-        access_token: helpers.create_token(currentUser)
+        access_token: _h.create_token(currentUser)
     });
 
 };
@@ -93,7 +92,7 @@ let forgot_password = async (req, res) => {
         })
     }
     currentUser = coachee ? coachee : coach;
-    if (!currentUser) throw new Error('Non-existd email')
+    if (!currentUser) throw new UserFacingError('Non-existd email')
     let randPassword = randToken.uid(6);
     let salt = bcrypt.genSaltSync(10);
     let hash = bcrypt.hashSync(randPassword, salt);
@@ -108,7 +107,7 @@ let forgot_password = async (req, res) => {
         "<html>Hey " + currentUser.firstName +
         ",<br/><br/> We've glad to have changed your password to " + "<p style='color:red'>" + randPassword + "</p>" +
         " so that you're able to login and connect with your UP Community soon!<br/><br/>You may change the password again if you like in your Settings page in our app.<br/><br/><Table><TR ALIGN='Left'><TD><a href='http://www.uphealth.sg'><img src='http://user-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/88884/145502_842983.png' height='150' alt='UP logo'></a></TD><TD>Cheering you on,<br>UP Welcome Team <br>T: (+65) 6743 4010<br>W: uphealth.sg <br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
-    h.send_support_email(email, subjectData, htmlData);
+   _h.send_support_email(email, subjectData, htmlData);
     res.status(200).json({
         message: 'set random password successfully'
     })
@@ -210,7 +209,7 @@ let change_password = async (req, res) => {
             currentUser = await Coach.findById(_id)
             isMatch = await currentUser.comparePassword(currentPassword)
         }
-        if (!isMatch) throw Error('The user ID and password don\'t match.');
+        if (!isMatch) throw UserFacingError('The user ID and password don\'t match.');
 
         let salt = bcrypt.genSaltSync(10);
         let hash = bcrypt.hashSync(newPassword, salt);

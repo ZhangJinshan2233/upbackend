@@ -1,4 +1,5 @@
 const Model = require('../models')
+const {UserFacingError} = require('../middlewares').errorHandler
 /**
  * create new  category('challenge category','habit category',
  * 'membership category',and 'app vrsion category')
@@ -11,7 +12,7 @@ let create_category = async (req, res) => {
     let category = await Model.Category.findOne({
         name: name
     });
-    if (category) throw new Error('name has existed already')
+    if (category) throw new UserFacingError('name has existed already')
     let newCategory = {};
     let {
         imgData,
@@ -19,7 +20,7 @@ let create_category = async (req, res) => {
         ...otherProperties
     } = req.body
 
-    if (!kind) throw Error('please selected kind of categories')
+    if (!kind) throw UserFacingError('please selected kind of categories')
     let bufferImgData = null
 
     if (imgData) {
@@ -32,7 +33,7 @@ let create_category = async (req, res) => {
     })
 
 
-    if (!newCategory) throw new Error('unsuccessfully');
+    if (!newCategory) throw new UserFacingError('unsuccessfully');
     res.status(200).json({
         message: 'create successfully'
     })

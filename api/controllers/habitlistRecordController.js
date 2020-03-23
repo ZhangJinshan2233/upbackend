@@ -9,7 +9,7 @@ const {
     format,
     lastDayOfWeek
 } = require('date-fns');
-const h = require('../helpers')
+const _h = require('../helpers')
 const {
     Types
 } = require('mongoose');
@@ -27,7 +27,7 @@ let update_current_habit_record = async (req, res) => {
     let {
         startOfDay,
         endOfDay
-    } = h.convert_time_to_localtime(req.body.createDate)
+    } = _h.convert_time_to_localtime(req.body.createDate)
     let currentDay = daysOfWeek[getDay(new Date(req.body.createDate))];
     let habitsRecordOfScheduleDayPromise = HabitlistRecord
         .findOne({
@@ -116,7 +116,7 @@ let create_habit_record = async (req, res) => {
     let {
         startOfDay,
         endOfDay
-    } = h.convert_time_to_localtime(req.body.createDate)
+    } = _h.convert_time_to_localtime(req.body.createDate)
     let habitlistRecordOfDay = await HabitlistRecord.findOne({
         $and: [{
                 _coachee: Types.ObjectId(_id)
@@ -197,7 +197,7 @@ let get_habitlist_record_of_day = async (req, res) => {
     let {
         startOfDay,
         endOfDay
-    } = h.convert_time_to_localtime(req.query.scheduleDay)
+    } = _h.convert_time_to_localtime(req.query.scheduleDay)
     let habitsOfScheduleDay = await HabitlistRecord
         .findOne({
             $and: [{

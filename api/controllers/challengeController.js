@@ -1,6 +1,7 @@
 'use strict'
 const _h = require('../helpers')
 const notification = require('../notification');
+const {UserFacingError} = require('../middlewares').errorHandler
 const {
     Challenge,
     ChallengeCategory,
@@ -495,7 +496,7 @@ let rate_post = async (req, res) => {
     let {
         postId
     } = req.params
-    if (userType.includes('Coachee')) throw Error('can not rate post')
+    if (userType.includes('Coachee')) throw new UserFacingError('can not rate post')
     let post = await FoodJournalPost.findByIdAndUpdate((postId), {
         $set: {
             rating

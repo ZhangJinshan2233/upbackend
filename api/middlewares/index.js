@@ -1,6 +1,7 @@
 'use strict'
-const passport = require('passport')
-const passportMiddleware = require('./passport')(passport)
+const passportMiddleware = require('./passport')
+const errorHandler=require('./errorHandler')
 module.exports = {
-    
+    passportMiddleware,
+    errorHandler
 }

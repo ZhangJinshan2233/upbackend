@@ -2,6 +2,7 @@
 const {
     Indicator
 } = require('../models')
+const {UserFacingError} = require('../middlewares').errorHandler
 /**
  * create new indicator
  * @param {name, groupName, unit,isObsolete:false} req 
@@ -15,7 +16,7 @@ let create_indicator = async (req, res) => {
         unit
     } = req.body
 
-    if (!name || !group || !unit) throw Error('fill all space');
+    if (!name || !group || !unit) throw new UserFacingError('fill all space');
     let existedName = await Indicator.findOne({
         name: name
     });

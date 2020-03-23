@@ -2,7 +2,8 @@
 const {
     CompanyCode
 } = require('../models')
-const randomCode = require('rand-token')
+const randomCode = require('rand-token');
+const {UserFacingError} = require('../middlewares').errorHandler
 /**
  * create new company code
  * @param {} req 
@@ -19,7 +20,7 @@ let create_company_code = async (req, res) => {
     })
 
     if (company) {
-        throw Error('company name or code existed')
+        throw new UserFacingError('company name or code existed')
     }
 
     let code = randomCode.generate(6).toLowerCase()
@@ -30,7 +31,7 @@ let create_company_code = async (req, res) => {
         description
     })
 
-    if (!companyCode) throw Error("failed to create code")
+    if (!companyCode) throw new UserFacingError("failed to create code")
     res.status(200).json({
         companyCode
     })
@@ -71,7 +72,7 @@ let get_companyCodes_pagiantion = async (req, res) => {
             companyCodes
         })
     } catch (error) {
-        throw new Error('get healthytips error')
+        throw new UserFacingError('get healthytips error')
     }
 };
 
