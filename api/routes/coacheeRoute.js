@@ -14,6 +14,10 @@ Router
     .post(coacheeController.signup);
 
 Router
+    .route('/batchupload')
+    .post(coacheeController.multiple_signup)
+    
+Router
     .route('/count')
     .get(coacheeController.get_coachee_total_numbers)
 

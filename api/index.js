@@ -74,6 +74,7 @@ app.use(function (err, req, res, next) {
             })
 
     } else {
+        console.log(err)
         res.status(500)
             .json({
                 message: "internal server error"

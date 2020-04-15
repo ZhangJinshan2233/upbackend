@@ -9,7 +9,9 @@ const {
 const _h = require('../helpers');
 const bcrypt = require('bcrypt');
 const randToken = require('rand-token');
-const {UserFacingError} = require('../middlewares/index').errorHandler
+const {
+    UserFacingError
+} = require('../middlewares/index').errorHandler
 /**
  * @function signin.
  * @public
@@ -101,13 +103,7 @@ let forgot_password = async (req, res) => {
             password: hash
         }
     }).exec()
-
-    let subjectData = "Reset password";
-    let htmlData =
-        "<html>Hey " + currentUser.firstName +
-        ",<br/><br/> We've glad to have changed your password to " + "<p style='color:red'>" + randPassword + "</p>" +
-        " so that you're able to login and connect with your UP Community soon!<br/><br/>You may change the password again if you like in your Settings page in our app.<br/><br/><Table><TR ALIGN='Left'><TD><a href='http://www.uphealth.sg'><img src='http://user-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/88884/145502_842983.png' height='150' alt='UP logo'></a></TD><TD>Cheering you on,<br>UP Welcome Team <br>T: (+65) 6743 4010<br>W: uphealth.sg <br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
-   _h.send_support_email(email, subjectData, htmlData);
+    _h.send_support_email(email, currentUser.firstName, randPassword);
     res.status(200).json({
         message: 'set random password successfully'
     })

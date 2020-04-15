@@ -14,6 +14,9 @@ Router
     }), indicatorRecordController.get_latest_record_of_all_indicators)
 
 Router
+    .route('/batchupload')
+    .post(indicatorRecordController.insert_multiple_coachees_records)
+Router
     .route('/pagination/:indicatorName')
     .get(passport.authenticate('jwt', {
         session: false

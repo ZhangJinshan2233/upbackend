@@ -39,7 +39,7 @@ const coacheeSchema = new Schema({
     },
     isMember:{
         type:Boolean,
-        default:true
+        default:false
     },
     gender: {
         type: String,

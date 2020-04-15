@@ -1,13 +1,16 @@
 'use strict'
 const {
     Indicator,
-    IndicatorRecord
+    IndicatorRecord,
+    Coachee
 } = require('../models');
 const {
     Types
 } = require('mongoose');
 const _ = require('lodash');
-
+const {
+    UserFacingError
+} = require('../middlewares').errorHandler
 /**
  * create new indicator record
  * @param {_indicator,value,createDate} req 
@@ -75,7 +78,7 @@ let create_indicator_record = async (req, res) => {
     let fullPropertiesRecord = await IndicatorRecord.findById(record._id)
 
     let newIndicatorRecord = {
-        _id:fullPropertiesRecord._id,
+        _id: fullPropertiesRecord._id,
         name: fullPropertiesRecord._indicator.name,
         group: fullPropertiesRecord._indicator.group,
         value: fullPropertiesRecord.value,
@@ -461,19 +464,90 @@ let find_latest_record_by_indicator_name = async (req, res) => {
             status: "Normal",
             createDate: record.createDate,
         }
-    }else{
-       indicatorRecord={
-        name: _indicator.name,
-        group: _indicator.group,
-        value: '',
-        status: "Normal",
-        unit:_indicator.unit,
-        createDate: ""
-       }
+    } else {
+        indicatorRecord = {
+            name: _indicator.name,
+            group: _indicator.group,
+            value: '',
+            status: "Normal",
+            unit: _indicator.unit,
+            createDate: ""
+        }
     }
 
     res.status(200).json({
         indicatorRecord
+    })
+}
+
+let insert_multiple_coachees_records = async (req, res) => {
+    let {
+        records
+    } = req.body
+
+    if (!records.length)
+        throw new UserFacingError('please add coachees')
+    /**
+     * check email exist database or not
+     */
+    let originalEmails = []
+    let findCoacheePromises = []
+    records.forEach(record => {
+        let coacheePromise = Coachee.findOne({
+            email: record.email
+        })
+        findCoacheePromises.push(coacheePromise)
+        originalEmails.push(record.email)
+    })
+    let existingCoachees = await Promise.all(findCoacheePromises)
+    let existingEmails = []
+    let errString = '';
+    existingCoachees.forEach(coachee => {
+        if (coachee) {
+            existingEmails.push(coachee.email)
+        }
+    })
+    //get no-existed email
+    let differenceEmails = []
+    differenceEmails = _.difference(originalEmails, existingEmails)
+    if (differenceEmails.length > 0) {
+        differenceEmails.forEach(email => {
+            errString += email;
+            errString += '\n';
+        })
+        throw new UserFacingError(`The following emails do not exist: ${ errString}`);
+    }
+    // get whole indicators
+    let indicators = await Indicator.find().select('_id name')
+    let insertRecords = []
+    //get all records which will insert
+    insertRecords = records.reduce((acc, cuu) => {
+        let indicatorRecords = []
+        let coachee = existingCoachees.find(coachee => coachee.email == cuu.email)
+        cuu['records'].forEach(record => {
+            let indicator = indicators.find(indic => indic.name == record.name);
+            if (indicator) {
+                let indicatorRecord = {
+                    _coachee: coachee._id,
+                    value: record.value,
+                    _indicator: indicator._id,
+                    createDate: new Date()
+
+                }
+                indicatorRecords.push(indicatorRecord)
+            }
+        })
+        return [...acc, ...indicatorRecords]
+    }, [])
+
+    if (insertRecords.length > 0)
+        await IndicatorRecord.insertMany(insertRecords)
+    /**
+     * insert new records
+     */
+
+    res.json({
+        message: 'insert successfully'
     })
 }
 module.exports = {
@@ -483,5 +557,6 @@ module.exports = {
     get_latest_record_of_all_indicators,
     get_record_by_name_and_pagination,
     update_record_by_id,
-    find_latest_record_by_indicator_name
+    find_latest_record_by_indicator_name,
+    insert_multiple_coachees_records
 }

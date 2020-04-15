@@ -34,7 +34,7 @@ let create_token = (user) => {
         })
 }
 
-let organize_email = async (user, pass, fromEmail, toEmail, subjectData, htmlData) => {
+let create_transport = (user, pass) => {
     let transporter = nodemailer.createTransport({
         host: config.emailHost,
         port: config.emailPort,
@@ -44,6 +44,36 @@ let organize_email = async (user, pass, fromEmail, toEmail, subjectData, htmlDat
             pass: process.env.MAILJET_API_SECRET || pass
         }
     });
+    return transporter
+}
+
+let send_multiple_welcome_email = (newCoachees) => {
+    let emailContent = "Welcome to the UP Health community. " +
+        "You'll find no where like this where great place where" +
+        " friendships meet professional coaching so that becoming " +
+        "healthy becomes more fun and desirable. " +
+        "We can't wait for you to join us and work " +
+        "toward achieving your health goals together."
+    let subjectData = "Registration from UPHealth";
+    let transporter = create_transport(config.welcomeEmailAuth.user, config.welcomeEmailAuth.pass)
+    let sendPromises = []
+    newCoachees.forEach(newCoachee => {
+        let htmlData =
+            "<html>Hey " + newCoachee.firstName + ",<br/><br/>" + emailContent + "<br/><br/><Table><TR ALIGN='Left'><TD><a href='http://www.uphealth.sg'><img src='http://user-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/88884/145502_842983.png' height='150' alt='UP logo'></a></TD><TD>Cheering you on,<br>UP Welcome Team <br>T: (+65) 6743 4010<br>W: uphealth.sg <br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
+        let sendPromise = transporter.sendMail({
+            from: config.welcomeEmail,
+            to: newCoachee.email,
+            subject: subjectData,
+            html: htmlData,
+        })
+        sendPromises.push(sendPromise)
+    })
+
+    return sendPromises
+}
+
+let organize_email = async (user, pass, fromEmail, toEmail, subjectData, htmlData) => {
+    let transporter = create_transport(user, pass)
     try {
         let info = await transporter.sendMail({
             from: fromEmail,
@@ -51,9 +81,8 @@ let organize_email = async (user, pass, fromEmail, toEmail, subjectData, htmlDat
             subject: subjectData,
             html: htmlData,
         })
-        console.log(info)
     } catch (error) {
-        console.log(error)
+        console.log("send unsuccessfully", toEmail)
     }
 }
 /**
@@ -63,7 +92,17 @@ let organize_email = async (user, pass, fromEmail, toEmail, subjectData, htmlDat
  * @param {*} htmlData 
  * @returns 
  */
-let send_welcome_email = (toEmail, subjectData, htmlData) => {
+let send_welcome_email = (toEmail, firstName) => {
+    let emailContent = "Welcome to the UP Health community. " +
+        "You'll find no where like this where great place where" +
+        " friendships meet professional coaching so that becoming " +
+        "healthy becomes more fun and desirable. " +
+        "We can't wait for you to join us and work " +
+        "toward achieving your health goals together."
+
+    let subjectData = "Registration from UPHealth";
+    let htmlData =
+        "<html>Hey " + firstName + ",<br/><br/>" + emailContent + "<br/><br/><Table><TR ALIGN='Left'><TD><a href='http://www.uphealth.sg'><img src='http://user-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/88884/145502_842983.png' height='150' alt='UP logo'></a></TD><TD>Cheering you on,<br>UP Welcome Team <br>T: (+65) 6743 4010<br>W: uphealth.sg <br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
     organize_email(config.welcomeEmailAuth.user,
         config.welcomeEmailAuth.pass,
         config.welcomeEmail,
@@ -71,7 +110,12 @@ let send_welcome_email = (toEmail, subjectData, htmlData) => {
         subjectData,
         htmlData)
 };
-let send_support_email = async (toEmail, subjectData, htmlData) => {
+let send_support_email = async (toEmail, firstName, randPassword) => {
+    let subjectData = "Reset password";
+    let htmlData =
+        "<html>Hey " + firstName +
+        ",<br/><br/> We've glad to have changed your password to " + "<p style='color:red'>" + randPassword + "</p>" +
+        " so that you're able to login and connect with your UP Community soon!<br/><br/>You may change the password again if you like in your Settings page in our app.<br/><br/><Table><TR ALIGN='Left'><TD><a href='http://www.uphealth.sg'><img src='http://user-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/88884/145502_842983.png' height='150' alt='UP logo'></a></TD><TD>Cheering you on,<br>UP Welcome Team <br>T: (+65) 6743 4010<br>W: uphealth.sg <br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
     organize_email(config.supportEmailAuth.user,
         config.supportEmailAuth.pass,
         config.supportEmail,
@@ -267,5 +311,6 @@ module.exports = {
     get_rating_description,
     get_week_habitlist,
     convertBase64ToBuffer,
-    convertBufferToBase64
+    convertBufferToBase64,
+    send_multiple_welcome_email
 }

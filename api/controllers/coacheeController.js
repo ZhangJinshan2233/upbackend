@@ -13,7 +13,9 @@ const _ = require('lodash');
 const {
     Types
 } = require('mongoose')
-const {UserFacingError} = require('../middlewares').errorHandler
+const {
+    UserFacingError
+} = require('../middlewares').errorHandler
 /**
  * @function register
  * @public
@@ -46,7 +48,7 @@ let signup = async (req, res) => {
 
     if (!companyInfo) throw new UserFacingError('company code does not exist')
     group = companyInfo._id;
-    
+
     let systyemCoachPromise = Coach
         .findOne({
             email: 'support@uphealth.sg'
@@ -106,19 +108,8 @@ let signup = async (req, res) => {
         _indicator: weightIndicator._id,
         createDate: new Date()
     })
-
-    let emailContent = "Welcome to the UP Health community. " +
-        "You'll find no where like this where great place where" +
-        " friendships meet professional coaching so that becoming " +
-        "healthy becomes more fun and desirable. " +
-        "We can't wait for you to join us and work " +
-        "toward achieving your health goals together."
-
-    let subjectData = "Registration from UP";
-    let htmlData =
-        "<html>Hey " + firstName + ",<br/><br/>" + emailContent + "<br/><br/><Table><TR ALIGN='Left'><TD><a href='http://www.uphealth.sg'><img src='http://user-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/88884/145502_842983.png' height='150' alt='UP logo'></a></TD><TD>Cheering you on,<br>UP Welcome Team <br>T: (+65) 6743 4010<br>W: uphealth.sg <br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
     if (newUser)
-        _h.send_welcome_email(email, subjectData, htmlData);
+        _h.send_welcome_email(email, firstName);
     return res.status(200).json({
         newUser
     })
@@ -300,6 +291,7 @@ let get_coachee_by_coacheeId = async (req, res) => {
 // }
 
 let get_coachees_pagination = async (req, res) => {
+    console.log('sortField'.sortField)
     let queryParams = req.query
     let {
         sortField,
@@ -308,9 +300,6 @@ let get_coachees_pagination = async (req, res) => {
         filterField,
     } = queryParams;
     switch (true) {
-        case (filterField == 'coach'):
-            field = 'coach.email';
-            break;
         case (filterField == 'group'):
             field = 'group.companyName'
             break;
@@ -502,6 +491,101 @@ let assign_group = async (req, res) => {
         message: "assign successfully"
     })
 }
+
+let multiple_signup = async (req, res) => {
+    let {
+        coachees
+    } = req.body
+    let findCoacheePromises = [];
+    if (!coachees.length)
+        throw new UserFacingError('please add coachees')
+    /**
+     * check email exist database or not
+     */
+    coachees.forEach(coachee => {
+        coacheePromise = Coachee.findOne({
+            email: coachee.email
+        }).select('email')
+        findCoacheePromises.push(coacheePromise)
+    })
+    let existingCoachees = await Promise.all(findCoacheePromises)
+    let existingEmails = []
+    let errString = '';
+    existingCoachees.forEach(coachee => {
+        if (coachee) {
+            existingEmails.push(coachee.email)
+            errString += coachee.email;
+            errString += '\n';
+        }
+    })
+
+    if (existingEmails.length > 0)
+        throw new UserFacingError(`The following emails existed: ${ errString}`)
+    /**
+     * insert new coachees
+     */
+    let systyemCoachPromise = Coach
+        .findOne({
+            email: 'support@uphealth.sg'
+        })
+        .select('_id');
+
+    let weightIndicatorPromise = Indicator
+        .findOne({
+            name: 'Weight'
+        })
+        .select('_id');
+
+    let [systyemCoach, weightIndicator] = await Promise.all([
+        systyemCoachPromise,
+        weightIndicatorPromise
+    ])
+    // assign coach
+    let coacheesAssignedCoach = []
+    let companyInfos = await CompanyCode.find()
+        .select('_id companyName')
+    for (let i = 0; i < coachees.length; i++) {
+        let companyInfo = companyInfos.find(info => info.companyName === coachees[i].companyName)
+        if (!companyInfo)
+            throw new UserFacingError(`This company name\"${coachees[i].companyName}\" do not match`);
+        let coachee = {
+            _coach: systyemCoach._id,
+            password: coachees[i].phoneNumber.toString(),
+            group: companyInfo._id,
+            ...coachees[i]
+        }
+        console.log(coachee)
+        coacheesAssignedCoach.push(coachee)
+    }
+    if (!coacheesAssignedCoach.length)
+        throw new UserFacingError('create coachees unsuccessfully')
+    let insertCoacheePromises = []
+    coacheesAssignedCoach.forEach(newCoachee => {
+        let insertCoacheePromise = Coachee.create(newCoachee)
+        insertCoacheePromises.push(insertCoacheePromise)
+    })
+    let insertedResults = await Promise.all(insertCoacheePromises)
+    //insert weight records
+    let weightRecords = [];
+    insertedResults.forEach(coachee => {
+        let weightRecord = {
+            _coachee: coachee._id,
+            value: coachee.weight,
+            _indicator: weightIndicator._id,
+            createDate: new Date()
+        }
+        weightRecords.push(weightRecord)
+    })
+
+    await IndicatorRecord.insertMany(weightRecords)
+    //send emails
+    try {
+        await Promise.all(_h.send_multiple_welcome_email(insertedResults))
+    } catch (err) {}
+    res.json({
+        message: "insert successfully"
+    })
+}
 module.exports = {
     signup,
     insert_recommended_habits,
@@ -509,5 +593,6 @@ module.exports = {
     get_coachee_total_numbers,
     get_coachee_by_coacheeId,
     assign_coach,
-    assign_group
+    assign_group,
+    multiple_signup
 }

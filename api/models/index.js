@@ -25,6 +25,7 @@ const Category=require('./category');
 const Note=require('./note');
 const SpecialityCategory=require('./specialityCategory')
 //fix deprecation warnings
+mongoose.set('useCreateIndex', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set("useUnifiedTopology", true);
 mongoose.connect(config.dbUrl, {
