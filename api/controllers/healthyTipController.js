@@ -135,7 +135,11 @@ let admin_get_healthyTips_pagination = async (req, res) => {
         throw new Error('get healthytips error')
     }
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_healthytips_total_numbers = async (req, res) => {
     let numHealthyTips = 0
     try {
@@ -149,7 +153,11 @@ let get_healthytips_total_numbers = async (req, res) => {
     })
 
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_healthyTip_by_id = async (req, res) => {
     let healthyTip = {}
     let {

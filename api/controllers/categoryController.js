@@ -78,7 +78,11 @@ let get_categories = async (req, res) => {
         throw new Error('get categories error')
     }
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_category_by_id = async (req, res) => {
     let {
         categoryId: _id
@@ -107,7 +111,11 @@ let get_category_by_id = async (req, res) => {
         category
     })
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let update_category = async (req, res) => {
     let {
         categoryId: _id

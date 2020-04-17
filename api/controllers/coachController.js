@@ -332,7 +332,11 @@ let get_coachees_pagination = async (req, res) => {
         coachees: convertedCoachees
     })
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_coachee = async (req, res) => {
     let {
         coacheeId: _id
@@ -356,7 +360,11 @@ let get_coachee = async (req, res) => {
         coachee: currentUser
     })
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_coach = async (req, res) => {
     let coach = {}
     let {
@@ -386,6 +394,11 @@ let get_coach = async (req, res) => {
         coach: currentCoach
     })
 }
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_enrolled_and_expired_members = async (req, res) => {
 
     let {
@@ -422,7 +435,11 @@ let get_enrolled_and_expired_members = async (req, res) => {
         expiredNumber
     })
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_coaches_pagination = async (req, res) => {
     let queryParams = req.query
     let {
@@ -454,7 +471,11 @@ let get_coaches_pagination = async (req, res) => {
         coaches
     })
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_coach_total_numbers = async (req, res) => {
 
     let numCoaches = 0
@@ -472,8 +493,11 @@ let get_coach_total_numbers = async (req, res) => {
     })
 
 }
-
-//coach admin update common coach
+/**
+ * coach admin update common coach
+ * @param {*} req 
+ * @param {*} res 
+ */
 let update_coach = async (req, res) => {
     let {
         coachId: _id

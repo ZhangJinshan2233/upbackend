@@ -30,8 +30,7 @@ const coacheeSchema = new Schema({
         required: true
     },
     lastName: {
-        type: String,
-        required: true
+        type: String
     },
      userType: {
         type: String,

@@ -13,7 +13,11 @@ const _h = require('../helpers')
 const {
     Types
 } = require('mongoose');
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let update_current_habit_record = async (req, res) => {
     let _coachee;
     let {
@@ -223,7 +227,11 @@ let get_habitlist_record_of_day = async (req, res) => {
         habitsOfScheduleDay
     })
 };
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_habitlist_record_of_current_week = async (req, res) => {
     let {
         coacheeId: _coachee

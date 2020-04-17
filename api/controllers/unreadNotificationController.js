@@ -3,7 +3,14 @@
 const {
     UnreadNotification
 } = require('../models')
-
+/**
+ * 
+ * @param {*} type 
+ * @param {*} author 
+ * @param {*} authorModel 
+ * @param {*} recipient 
+ * @param {*} recipientModel 
+ */
 let create_unread_notification = (type, author, authorModel, recipient, recipientModel) => {
 
     UnreadNotification.create({
@@ -14,7 +21,11 @@ let create_unread_notification = (type, author, authorModel, recipient, recipien
         recipientModel
     })
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_unread_notifications = async (req, res) => {
     let {
         _id: recipient,
@@ -55,7 +66,11 @@ let get_unread_notifications = async (req, res) => {
         unreadNotifications
     })
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let remove_notifications = async (req, res) => {
     let {
         _id: recipient,

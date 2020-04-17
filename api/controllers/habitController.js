@@ -4,6 +4,11 @@ const {
     Types
 } = require('mongoose')
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let create_habit = async (req, res) => {
     let {
         _id: _coachee
@@ -17,7 +22,11 @@ let create_habit = async (req, res) => {
         newHabit: habit
     })
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_habits = async (req, res) => {
 
     let {
@@ -36,7 +45,11 @@ let get_habits = async (req, res) => {
         habits: habits
     })
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let update_habit = async (req, res) => {
 
     let {

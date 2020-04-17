@@ -33,7 +33,11 @@ let create_token = (user) => {
             expiresIn: 15000
         })
 }
-
+/**
+ * 
+ * @param {*} user 
+ * @param {*} pass 
+ */
 let create_transport = (user, pass) => {
     let transporter = nodemailer.createTransport({
         host: config.emailHost,
@@ -46,7 +50,10 @@ let create_transport = (user, pass) => {
     });
     return transporter
 }
-
+/**
+ * 
+ * @param {*} newCoachees 
+ */
 let send_multiple_welcome_email = (newCoachees) => {
     let emailContent = "Welcome to the UP Health community. " +
         "You'll find no where like this where great place where" +
@@ -71,7 +78,15 @@ let send_multiple_welcome_email = (newCoachees) => {
 
     return sendPromises
 }
-
+/**
+ * 
+ * @param {*} user 
+ * @param {*} pass 
+ * @param {*} fromEmail 
+ * @param {*} toEmail 
+ * @param {*} subjectData 
+ * @param {*} htmlData 
+ */
 let organize_email = async (user, pass, fromEmail, toEmail, subjectData, htmlData) => {
     let transporter = create_transport(user, pass)
     try {
@@ -110,6 +125,12 @@ let send_welcome_email = (toEmail, firstName) => {
         subjectData,
         htmlData)
 };
+/**
+ * 
+ * @param {*} toEmail 
+ * @param {*} firstName 
+ * @param {*} randPassword 
+ */
 let send_support_email = async (toEmail, firstName, randPassword) => {
     let subjectData = "Reset password";
     let htmlData =
@@ -140,7 +161,10 @@ let convert_time_to_localtime = (timestring) => {
         endOfDay
     }
 };
-
+/**
+ * 
+ * @param {*} asyncFunc 
+ */
 let errorHandler = async (asyncFunc) => {
     try {
         let res = await asyncFunc()
@@ -156,11 +180,19 @@ let errorHandler = async (asyncFunc) => {
 let set_membershipEndDate_less_than_currentDate = function (duration) {
     return new Date(addDays(new Date(), duration))
 };
-
+/**
+ * 
+ * @param {*} endDate 
+ * @param {*} duration 
+ */
 let set_membershipEndDate_bigger_than_currentDate = function (endDate, duration) {
     return new Date(addDays(endDate, duration))
 }
-
+/**
+ * 
+ * @param {*} endDate 
+ * @param {*} duration 
+ */
 let set_membershipEndDate = function (endDate, duration) {
     if (compareAsc(endDate, new Date())) {
         return set_membershipEndDate_bigger_than_currentDate(endDate, duration)
@@ -277,7 +309,6 @@ let get_week_habitlist = async (coacheeId) => {
 
     return weekHabitlist
 }
-
 
 /**
  * convert image of base64 format to buffer

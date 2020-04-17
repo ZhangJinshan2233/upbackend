@@ -17,7 +17,11 @@ let create_note = async (req, res) => {
         newNote
     })
 };
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_notes_pagination = async (req, res) => {
     let {
         coacheeId: _coachee
@@ -43,7 +47,11 @@ let get_notes_pagination = async (req, res) => {
         notes
     })
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_note_by_id = async (req, res) => {
     let {
         noteId: _id
@@ -54,7 +62,11 @@ let get_note_by_id = async (req, res) => {
         note
     })
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let update_note = async (req, res) => {
     let {
         noteId: _id

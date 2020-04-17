@@ -31,6 +31,7 @@ let signin = async (req, res) => {
     coachee = await Coachee.findOne({
         email: email
     })
+    console.log(coachee)
     if (coachee) {
         let isMember = await MemberRecord.findOne({
             _coachee: coachee._id

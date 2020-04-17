@@ -396,7 +396,11 @@ let get_record_by_name_and_pagination = async (req, res) => {
         onePageRecords: selectedFieldsOfIndicatorRecords
     })
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let update_record_by_id = async (req, res) => {
     let {
         indicatorId
@@ -419,7 +423,11 @@ let update_record_by_id = async (req, res) => {
         newRecord: record
     })
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let find_latest_record_by_indicator_name = async (req, res) => {
     let _coachee
     let {
@@ -479,6 +487,11 @@ let find_latest_record_by_indicator_name = async (req, res) => {
         indicatorRecord
     })
 }
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 
 let insert_multiple_coachees_records = async (req, res) => {
     let {

@@ -13,7 +13,12 @@ NotificationClient.setApp({
 });
 
 NotificationClient.userAuthKey = config.notificationAuth.userAuthKey;
-
+/**
+ * 
+ * @param {*} name 
+ * @param {*} recipientId 
+ * @param {*} notificationContent 
+ */
 let send_notification = (name, recipientId, notificationContent) => {
 
     let notification = new Notification({

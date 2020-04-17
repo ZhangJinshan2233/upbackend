@@ -78,30 +78,6 @@ let signup = async (req, res) => {
         weight,
         ...otherProperties
     });
-
-    // let memberCategoryPromise = MembershipCategory.findOne({
-    //     name: 'Trial'
-    // })
-    // let newUserAndMemberCategory = await Promise.all([newUserPromise, memberCategoryPromise])
-    // let newUser = newUserAndMemberCategory[0];
-    // let memberCategory = newUserAndMemberCategory[1]
-    // if (!newUser) throw Error('created unsuccessfully')
-    // let newMembership = await Membership.create({
-    //     _coachee: newUser._id,
-    //     _membershipCategory: memberCategory._id
-    // });
-
-    // if (!newMembership) throw Error('failed to register');
-
-    // let memberRecord = await MemberRecord.create({
-    //     _coachee: newUser._id,
-    //     memberships: [{
-    //         _membership: newMembership._id
-    //     }],
-    //     expireAt: addDays(new Date(), memberCategory.duration)
-    // })
-    // if (!memberRecord) throw Error('failed to register');
-
     await IndicatorRecord.create({
         _coachee: newUser._id,
         value: weight,
@@ -179,7 +155,11 @@ let insert_recommended_habits = async (req, res) => {
 
     })
 }
-
+/**
+ * find coach by id
+ * @param {coachee id} req 
+ * @param {*} res 
+ */
 let get_coachee_by_coacheeId = async (req, res) => {
     let coachee = {}
     let {
@@ -206,90 +186,11 @@ let get_coachee_by_coacheeId = async (req, res) => {
     })
 }
 
-// let get_coachees_pagination = async (req, res) => {
-//     let queryParams = req.query
-//     let {
-//         sortField,
-//         sortOrder,
-//         filter
-//     } = queryParams;
-//     let numSort = sortOrder == 'desc' ? -1 : 1
-//     let pageSize = parseInt(queryParams.pageSize)
-//     let pageNumber = parseInt(queryParams.pageNumber) || 0
-//     let coachees = [];
-//     try {
-//         coachees = await Coachee
-//             .find({
-//                 email: {
-//                     $regex: filter
-//                 }
-//             })
-//             .sort({
-//                 [sortField]: numSort
-//             })
-//             .skip(pageSize * pageNumber)
-//             .limit(pageSize)
-//             .select('email firstName lastName _coach isMember group createdAt')
-//             .populate({
-//                 path: '_coach',
-//                 select: 'email firstName lastName'
-//             })
-//             .populate({
-//                 path: 'group',
-//                 select: 'companyName'
-//             })
-//         let memberRecordPromises = []
-//         let memberRecords = []
-//         let combinedCochees = []
-//         if (coachees.length > 0) {
-//             for (coachee of coachees) {
-//                 let memberRecordPromise = MemberRecord.findOne({
-//                     _coachee: coachee._id
-//                 })
-//                 memberRecordPromises.push(memberRecordPromise)
-//             }
-
-//             memberRecords = await Promise.all(memberRecordPromises)
-
-//         }
-
-//         let filteredMemberRecords = memberRecords.filter((memberRecord) => {
-//             return memberRecord != null
-//         })
-//         if (filteredMemberRecords.length > 0) {
-//             combinedCochees = coachees.reduce((accmulator, current) => {
-//                 let combinedCochee = {
-//                     memberStatus: false,
-//                     expireAt: null,
-//                     ...JSON.parse(JSON.stringify(current))
-//                 }
-//                 for (memberRecord of filteredMemberRecords) {
-//                     if (current._id.toString() == memberRecord._coachee.toString()) {
-//                         combinedCochee.expireAt = memberRecord.expireAt
-//                         combinedCochee.memberStatus = true
-//                     }
-//                     continue
-//                 }
-//                 return [...accmulator, combinedCochee]
-//             }, [])
-//         } else {
-//             combinedCochees = coachees.map((coachee) => {
-//                 return {
-//                     expireAt: null,
-//                     memberStatus: false,
-//                     ...JSON.parse(JSON.stringify(coachee))
-//                 }
-//             })
-//         }
-//         res.status(200).json({
-//             coachees: combinedCochees
-//         })
-
-//     } catch (error) {
-//         throw new Error('get coachees error')
-//     }
-// }
-
+/**
+ * admin get coachees
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_coachees_pagination = async (req, res) => {
     console.log('sortField'.sortField)
     let queryParams = req.query
@@ -428,7 +329,11 @@ let get_coachees_pagination = async (req, res) => {
         throw new Error('get coachees error')
     }
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let get_coachee_total_numbers = async (req, res) => {
 
     let numCoachees = 0
@@ -443,7 +348,11 @@ let get_coachee_total_numbers = async (req, res) => {
     })
 
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let assign_coach = async (req, res) => {
     let {
         coachees,
@@ -467,7 +376,11 @@ let assign_coach = async (req, res) => {
         message: "assign successfully"
     })
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let assign_group = async (req, res) => {
     let {
         coachees,
@@ -491,7 +404,11 @@ let assign_group = async (req, res) => {
         message: "assign successfully"
     })
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 let multiple_signup = async (req, res) => {
     let {
         coachees
@@ -554,7 +471,6 @@ let multiple_signup = async (req, res) => {
             group: companyInfo._id,
             ...coachees[i]
         }
-        console.log(coachee)
         coacheesAssignedCoach.push(coachee)
     }
     if (!coacheesAssignedCoach.length)
