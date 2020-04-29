@@ -495,9 +495,9 @@ let multiple_signup = async (req, res) => {
 
     await IndicatorRecord.insertMany(weightRecords)
     //send emails
-    try {
-        await Promise.all(_h.send_multiple_welcome_email(insertedResults))
-    } catch (err) {}
+    // try {
+    //     await Promise.all(_h.send_multiple_welcome_email(insertedResults))
+    // } catch (err) {}
     res.json({
         message: "insert successfully"
     })

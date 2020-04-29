@@ -1,57 +1,52 @@
 const OneSignal = require('onesignal-node');
-const config = require('../config')
+const {
+    notificationAuth
+} = require('../config')
 
 const {
-    Notification,
-    Client,
+    Client
 } = OneSignal;
-let NotificationClient = new Client({});
 
-NotificationClient.setApp({
-    appAuthKey: config.notificationAuth.appAuthKey,
-    appId: config.notificationAuth.appId
-});
+const {
+    appId,
+    appAuthKey
+} = notificationAuth
 
-NotificationClient.userAuthKey = config.notificationAuth.userAuthKey;
+const NotificationClient = new Client(appId, appAuthKey);
+
 /**
  * 
  * @param {*} name 
  * @param {*} recipientId 
  * @param {*} notificationContent 
  */
-let send_notification = (name, recipientId, notificationContent) => {
-
-    let notification = new Notification({
-        content_available: true
-    });
-    notification.postBody['contents'] = {
-        "en": notificationContent,
+let send_notification = async (name, recipientId, notificationContent) => {
+    const notification = {
+        contents: {
+            'en': notificationContent
+        },
+        headings: {
+            "en": name
+        },
+        filters: [{
+            "field": "tag",
+            "key": "userID",
+            "relation": "=",
+            "value": recipientId
+        }]
     };
-    // notification.postBody['data'] = {
-    //     "notificationType": "message"
-    // }
-    notification.postBody["headings"] = {
-        "en": name,
+    try {
+        const notificationRes = await NotificationClient.createNotification(notification);
+        console.log(notificationRes.body.id);
+    } catch (e) {
+        if (e instanceof OneSignal.HTTPError) {
+            // When status code of HTTP response is not 2xx, HTTPError is thrown.
+            console.log(e.statusCode);
+            console.log(e.body);
+        }
     }
-
-    notification.postBody["filters"] = [{
-        "field": "tag",
-        "key": "userID",
-        "relation": "=",
-        "value": recipientId
-    }];
-
-    NotificationClient.sendNotification(notification)
-        .then(function (response) {
-
-        })
-        .catch(function (err) {
-            console.log('Something went wrong...', err);
-            throw err
-
-        });
-
 }
+
 
 module.exports = {
     send_notification
