@@ -86,6 +86,9 @@ let get_active_challenges = async (req, res) => {
                     isObsolete: false
                 }
             ]
+        }).populate({
+           path: '_challengeCategory',
+           select:'name imgType imgData'
         })
         .populate({
             path: 'posts._post',
@@ -165,7 +168,7 @@ let create_new_post = async (req, res) => {
         }
     ).exec()
 
-    notification.send_notification(firstName + lastName, recipient, notificationContent)
+    notification.sendGeneralNotification(firstName + lastName, recipient, notificationContent)
     await UnreadNotification.create({
         type: "post",
         author,
@@ -429,7 +432,12 @@ let get_nonactive_challenges = async (req, res) => {
                     isObsolete: false
                 }
             ]
-        }).populate({
+        })
+        .populate({
+            path: '_challengeCategory',
+            select:'name'
+         })
+        .populate({
             path: 'posts._post',
             select: 'rating'
         })

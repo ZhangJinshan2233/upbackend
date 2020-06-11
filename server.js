@@ -13,3 +13,8 @@ require('./api/socket')(io)
 improveeServer.listen(process.env.PORT || 3000, () => {
     console.log('improvee server is running')
 })
+
+// let PORT=3000+parseInt(process.env.NODE_APP_INSTANCE)
+// if(parseInt(process.env.NODE_APP_INSTANCE)===0){
+//     require('./api/shedule')()
+// }

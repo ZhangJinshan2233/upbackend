@@ -1,18 +1,4 @@
-const OneSignal = require('onesignal-node');
-const {
-    notificationAuth
-} = require('../config')
-
-const {
-    Client
-} = OneSignal;
-
-const {
-    appId,
-    appAuthKey
-} = notificationAuth
-
-const NotificationClient = new Client(appId, appAuthKey);
+const NotificationClient = require('./createNotifocationClient')
 
 /**
  * 
@@ -20,13 +6,13 @@ const NotificationClient = new Client(appId, appAuthKey);
  * @param {*} recipientId 
  * @param {*} notificationContent 
  */
-let send_notification = async (name, recipientId, notificationContent) => {
+const sendNotification = (subTitle, recipientId, notificationContent) => {
     const notification = {
+        headings: {
+            "en": subTitle
+        },
         contents: {
             'en': notificationContent
-        },
-        headings: {
-            "en": name
         },
         filters: [{
             "field": "tag",
@@ -35,8 +21,13 @@ let send_notification = async (name, recipientId, notificationContent) => {
             "value": recipientId
         }]
     };
+    return NotificationClient.createNotification(notification);
+}
+
+//one to one
+const sendGeneralNotification = async (subTitle, recipientId, notificationContent) => {
     try {
-        const notificationRes = await NotificationClient.createNotification(notification);
+        const notificationRes = await sendNotification(subTitle, recipientId, notificationContent)
         console.log(notificationRes.body.id);
     } catch (e) {
         if (e instanceof OneSignal.HTTPError) {
@@ -46,8 +37,7 @@ let send_notification = async (name, recipientId, notificationContent) => {
         }
     }
 }
-
-
 module.exports = {
-    send_notification
+    sendGeneralNotification,
+    sendNotification,
 }

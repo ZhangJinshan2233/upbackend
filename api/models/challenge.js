@@ -2,14 +2,10 @@ const {
     Schema,
     model
 } = require('mongoose')
-const autopopulate = require('mongoose-autopopulate')
 const challengeSchema = new Schema({
     _challengeCategory: {
         type: Schema.Types.ObjectId,
-        ref: 'ChallengeCategory',
-        autopopulate: {
-            select: 'name imgType imgData'
-        }
+        ref: 'ChallengeCategory'
     },
     insightsOfCoach:{
         type:String,
@@ -49,5 +45,4 @@ const challengeSchema = new Schema({
     }
 
 })
-challengeSchema.plugin(autopopulate)
 module.exports = model('Challenge', challengeSchema)

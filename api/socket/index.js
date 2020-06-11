@@ -44,9 +44,9 @@ module.exports = (io) => {
 				if (clients.length < 2) {
 
 					if (isImage) {
-						notification.send_notification(name, recipientId, "Image message")
+						notification.sendGeneralNotification(name, recipientId, "Image message")
 					}
-					notification.send_notification(name, recipientId, content)
+					notification.sendGeneralNotification(name, recipientId, content)
 					unreadNotificationController.create_unread_notification('message', author,authorModel,recipientId, recipientModel)
 				}
 			})
