@@ -207,38 +207,6 @@ const membershipEndDateObject = {
 }
 
 /**
- * get rateing description for food journal challenge
- * @param {*} rating 
- */
-let get_rating_description = function (rating) {
-    let description = ''
-    switch (true) {
-        case (rating > 5):
-            description = "Full of great nutrition. This is an everyday food choice";
-            break;
-        case (rating >= 4.1):
-            description = "Full of great nutrition. This is an everyday food choice"
-            break;
-        case (rating >= 3.1):
-            description = 'Mostly full of good nutrition, but lacking some key nutrients. This is an everyday food choice.'
-            break;
-        case (rating >= 2.1):
-            description = 'Some good nutrition, but could be better. Choose no more than 2-3 times a week.'
-            break;
-        case (rating >= 1.1):
-            description = 'Not the worst choice, but highly processed Choose less than once a week.'
-            break;
-        case (rating = 1):
-            description = 'High in fat, sugar or salt Choose less than once a week.'
-            break;
-        default:
-            description = ""
-            break;
-    }
-    return description
-}
-
-/**
  * get all the habit of week for special coachee
  * @param {*} coacheeId 
  * @returns week habit list
@@ -339,7 +307,6 @@ module.exports = {
     convert_time_to_localtime,
     errorHandler,
     membershipEndDateObject,
-    get_rating_description,
     get_week_habitlist,
     convertBase64ToBuffer,
     convertBufferToBase64,

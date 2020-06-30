@@ -3,30 +3,30 @@ const {
     model
 } = require('mongoose')
 const autopopulate = require('mongoose-autopopulate')
-const foodJournalPostSchema = new Schema({
-    mealCategory: {
-        type: String,
+const SlumberTimeJournalPostSchema = new Schema({
+    fallAsleepTime: {
+        type: Date,
         required: true
     },
-    description: {
+    wakeUpTime: {
+        type: Date,
+        required: true
+    },
+
+    napDurationMins: {
         type: String
     },
-    imgData: {
-        type: Buffer,
-        default: null
+    currentMood: {
+        type: String
     },
-    imgType: {
+    caffeineConsumed: {
         type: String,
-        default: 'image/jpeg'
-    },
-    createDate: {
-        type: Date,
-        default: Date.now
+        default: 0
     },
     comments: [{
         _coachee: {
             type: Schema.Types.ObjectId,
-            default:null,
+            default: null,
             ref: 'Coachee',
             autopopulate: {
                 select: 'firstName lastName imgType imgData'
@@ -34,7 +34,7 @@ const foodJournalPostSchema = new Schema({
         },
         _coach: {
             type: Schema.Types.ObjectId,
-            default:null,
+            default: null,
             ref: 'Coach',
             autopopulate: {
                 select: 'firstName lastName imgType imgData'
@@ -49,13 +49,17 @@ const foodJournalPostSchema = new Schema({
         },
         createDate: {
             type: Date,
-            required:true
+            required: true
         }
     }],
+    createDate:{
+        type: Date,
+        default: Date.now
+    },
     rating: {
         type: Number,
         default: 0
     }
 })
-foodJournalPostSchema.plugin(autopopulate)
-module.exports = model('FoodJournalPost', foodJournalPostSchema)
+SlumberTimeJournalPostSchema.plugin(autopopulate)
+module.exports = model('SlumberTimeJournalPost', SlumberTimeJournalPostSchema)

@@ -1,3 +1,4 @@
+const OneSignal = require('onesignal-node');
 const NotificationClient = require('./createNotifocationClient')
 
 /**

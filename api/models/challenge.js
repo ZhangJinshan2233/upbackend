@@ -27,7 +27,7 @@ const challengeSchema = new Schema({
         postModel: {
             type: String,
             required: true,
-            enum: ['FoodJournalPost']
+            enum: ['FoodDetectiveJournalPost','SlumberTimeJournalPost']
         },
         _post: {
             type: Schema.Types.ObjectId,

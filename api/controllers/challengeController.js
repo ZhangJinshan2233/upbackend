@@ -1,26 +1,40 @@
 'use strict'
-const _h = require('../helpers')
 const notification = require('../notification');
-const {UserFacingError} = require('../middlewares').errorHandler
-const {
-    Challenge,
-    ChallengeCategory,
-    FoodJournalPost,
-    UnreadNotification,
-} = require('../models');
-const {
-    Types
-} = require('mongoose');
-const {
-    convertBase64ToBuffer,
-    convertBufferToBase64
-} = require('../helpers')
+const challengeService = require('../service/challengeService')();
+const Models = require('../models');
+const convertCategoryNameToModelName = (categoryName) => {
+    return categoryName.toLowerCase()
+        .split(' ')
+        .map(name => {
+            return name.charAt(0).toUpperCase().concat(name.slice(1))
+        })
+        .join('')
+        .concat('JournalPost')
+}
+/**
+ * 
+ * @param {firstName:string,lastName:string,_id:string} author 
+ * @param {model name:string} authorModel 
+ * @param {_id:string} recipient 
+ * @param {model name:string} recipientModel 
+ * @param {content:string} notificationContent 
+ */
+const snedPostNotification = async (author, authorModel, recipient, recipientModel, notificationContent) => {
+    await notification.sendGeneralNotification(author.firstName + author.lastName, recipient._id, notificationContent)
+    await Models.UnreadNotification.create({
+        type: "post",
+        author: author._id,
+        authorModel,
+        recipient: recipient._id,
+        recipientModel
+    })
+}
 /**
  * create new challenge record
- * @param {_challenge,value,createDate} req 
+ * @param {*} req 
  * @param {*} res 
  */
-let create_challenge = async (req, res) => {
+const createChallenge = async (req, res) => {
     let {
         _id: _coachee
     } = req.user
@@ -30,24 +44,9 @@ let create_challenge = async (req, res) => {
         endDate
     } = req.body
 
-    let newChallengePromise = Challenge.create({
-        _coachee,
-        _challengeCategory,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate)
-
-    })
-
-    let challengeCategoryPromise =  ChallengeCategory.findById(_challengeCategory)
-
-    let [newChallenge,challengeCategory]=await Promise.all([newChallengePromise,challengeCategoryPromise])
-    let image = `data:${challengeCategory.imgType};base64,` + Buffer.from(challengeCategory.imgData).toString('base64');
-
-    let activeChallenge = {
-        categoryName: challengeCategory.name,
-        categoryImage: image,
-        ...JSON.parse(JSON.stringify(newChallenge))
-    }
+    let activeChallenge = await challengeService
+        .createChallenge(_coachee, _challengeCategory, startDate, endDate)
+    if (!activeChallenge) throw new Error('internal error')
     res.status(201).json({
         activeChallenge
     })
@@ -59,8 +58,7 @@ let create_challenge = async (req, res) => {
  * @param {*} req 
  * @param {*} res 
  */
-let get_active_challenges = async (req, res) => {
-
+const getActiveChallenges = async (req, res) => {
     let _coachee = ""
     let {
         _id,
@@ -71,124 +69,33 @@ let get_active_challenges = async (req, res) => {
     } else {
         _coachee = req.query.coacheeId
     }
-    let currentDate = new Date();
     let activeChallenges = [];
-    let challenges = await Challenge.find({
-            $and: [{
-                    _coachee
-                },
-                {
-                    endDate: {
-                        $gte: currentDate
-                    }
-                },
-                {
-                    isObsolete: false
-                }
-            ]
-        }).populate({
-           path: '_challengeCategory',
-           select:'name imgType imgData'
-        })
-        .populate({
-            path: 'posts._post',
-            select: 'rating'
-        })
-    if (challenges.length > 0) {
-        activeChallenges = challenges.reduce((acc, current) => {
-            let image = `data:${current._challengeCategory.imgType};base64,` + Buffer.from(current._challengeCategory.imgData).toString('base64');
-            let totalRating = 0;
-            let averageRating = 0;
-            let ratedItems = 0;
-            for (let i = 0; i < current.posts.length; i++) {
-                if (current.posts[i]._post.rating > 0) {
-                    totalRating += current.posts[i]._post.rating;
-                    ratedItems += 1
-                }
-            }
-            averageRating = (totalRating / ratedItems).toFixed(1)
-            let activeChallenge = {
-                categoryName: current._challengeCategory.name,
-                categoryImage: image,
-                averageRating,
-                ...JSON.parse(JSON.stringify(current))
-            }
-            return [activeChallenge, ...acc]
-        }, [])
-    }
+
+    activeChallenges = await challengeService.getActiveChallenges(_coachee)
     res.status(200).json({
         activeChallenges
     })
 }
-
 /**
- * create new post
+ * get nonactive challenges
  * @param {*} req 
  * @param {*} res 
  */
-let create_new_post = async (req, res) => {
+const getNonactiveChallenges = async (req, res) => {
     let {
-        challengeId: _id
-    } = req.params;
-
-    let challenge = await Challenge.findById(_id)
-        .select('_coachee')
-        .populate({
-            path: "_coachee",
-            select: "_coach firstName lastName"
-        })
-
-    let {
-        firstName,
-        lastName,
-        _id: author,
-        _coach: recipient,
-
-    } = challenge._coachee
-    let authorModel = "Coachee";
-    let recipientModel = "Coach";
-    let notificationContent = "new post"
-    let {
-        imgData,
-        ...otherProperties
-    } = req.body
-
-    let newPost = await FoodJournalPost.create({
-        imgData: convertBase64ToBuffer(imgData),
-        ...otherProperties
-    })
-    await Challenge.findByIdAndUpdate(
-        _id, {
-            $push: {
-                posts: {
-                    _post: newPost._id,
-                    postModel: 'FoodJournalPost'
-                }
-            }
-        }
-    ).exec()
-
-    notification.sendGeneralNotification(firstName + lastName, recipient, notificationContent)
-    await UnreadNotification.create({
-        type: "post",
-        author,
-        authorModel,
-        recipient,
-        recipientModel
-    })
-    let imgDataBase64Post = {
-        _id: newPost._id,
-        description: newPost.description,
-        imgType: newPost.imgType,
-        imgData: convertBufferToBase64(newPost.imgData),
-        rating: newPost.rating,
-        createDate: newPost.createDate,
-        comments: newPost.comments,
-        mealCategory: newPost.mealCategory
+        _id: coacheeId,
+        userType
+    } = req.user
+    let nonactiveChallenges = [];
+    if (userType === "Coachee") {
+        nonactiveChallenges = await challengeService
+            .getNonactiveChallengesByCoachee(coacheeId, req.query.challengeCategoryId)
+    } else {
+        nonactiveChallenges = await challengeService
+            .getNonactiveChallengesByCoach(req.query.coacheeId)
     }
-
     res.status(200).json({
-        newPost: imgDataBase64Post
+        nonactiveChallenges
     })
 }
 /**
@@ -196,61 +103,62 @@ let create_new_post = async (req, res) => {
  * @param {*} req 
  * @param {*} res 
  */
-let get_foodjournalposts_pagination_by_challengeId = async (req, res) => {
+const getPostsByPagination = async (req, res) => {
     let {
         challengeId
     } = req.params;
     let skipNum = parseInt(req.query.skipNum);
-    let recordSize = 3;
-    let foodJournal = await Challenge.aggregate([{
-            $match: {
-                _id: Types.ObjectId(challengeId)
-            }
-        },
-        {
-            $unwind: {
-                path: "$posts"
-            }
-        },
-        {
-            $lookup: {
-                from: "foodjournalposts",
-                localField: "posts._post",
-                foreignField: "_id",
-                as: "post"
-            }
-        },
-        {
-            $unwind: {
-                path: "$post"
-            }
-        },
-        {
-            $sort: {
-                "post.createDate": -1
-            }
-        },
-        {
-            $skip: (skipNum)
-        }, {
-            $limit: (recordSize)
-        }
-    ]);
-    let foodJournalPosts = foodJournal.reduce((acc, current) => {
-        let post = {
-            _id: current.post._id,
-            description: current.post.description,
-            imgType: current.post.imgType,
-            imgData: current.post['imgData'],
-            rating: current.post.rating,
-            comments: current.post.comments,
-            mealCategory: current.post.mealCategory,
-            createDate: current.post.createDate
-        }
-        return [...acc, post]
-    }, [])
+    let postModel = convertCategoryNameToModelName(req.query.challengeCategoryName)
+
+    let journalPosts = await challengeService
+        .getPostsByPagination(challengeId, skipNum, postModel);
     res.status(200).json({
-        foodJournalPosts
+        journalPosts
+    })
+}
+/**
+ * create new post
+ * @param {*} req 
+ * @param {*} res 
+ */
+const createNewPost = async (req, res) => {
+    let postModel = convertCategoryNameToModelName(req.query.challengeCategoryName)
+    let {
+        _id
+    } = req.user
+    let coachee = await Models.Coachee.findById(_id)
+        .select("_coach firstName lastName")
+    let {
+        _coach: recipient,
+        ...author
+    } = coachee
+    let authorModel = "Coachee";
+    let recipientModel = "Coach";
+    let notificationContent = "new post"
+    let newPost = await challengeService
+        .createNewPost(req.params.challengeId, req.body, postModel);
+    console.log(newPost.createDate)
+    res.status(200).json({
+        newPost
+    })
+    await snedPostNotification(author, authorModel, recipient, recipientModel, notificationContent)
+}
+/**
+ * rate post
+ * @param {*} req 
+ * @param {*} res 
+ */
+const ratePost = async (req, res) => {
+    let {
+        rating
+    } = req.body
+    let {
+        postId
+    } = req.params;
+    let postModel = convertCategoryNameToModelName(req.query.challengeCategoryName)
+    await challengeService.ratePost(postId, rating, postModel)
+    res.status(200).json({
+        message: "rating successfully"
     })
 }
 /**
@@ -258,50 +166,13 @@ let get_foodjournalposts_pagination_by_challengeId = async (req, res) => {
  * @param {*} req 
  * @param {*} res 
  */
-let get_comments_by_postId = async (req, res) => {
+const getCommentsByPostId = async (req, res) => {
     let {
-        postId: _id
+        postId
     } = req.params;
+    let postModel = convertCategoryNameToModelName(req.query.challengeCategoryName)
     let comments = []
-    let post = await FoodJournalPost
-        .findById(_id)
-    if (post.comments.length > 0) {
-        comments = post.comments.reduce((acc, current) => {
-            let image = null
-            let sender = {
-                firstName: "",
-                lastName: "",
-                image: null
-            }
-            if (current._coach) {
-                if (current._coach.imgData !== null) {
-                    image = "data:image/jpeg;base64," + Buffer.from(current._coach.imgData).toString('base64');
-                }
-                sender = {
-                    firstName: current._coach.firstName,
-                    lastName: current._coach.lastName,
-                    image,
-                }
-            }
-            if (current._coachee) {
-                if (current._coachee.imgData !== null) {
-                    image = "data:image/jpeg;base64," + Buffer.from(current._coachee.imgData).toString('base64');
-                }
-                sender = {
-                    firstName: current._coachee.firstName,
-                    lastName: current._coachee.lastName,
-                    image
-                }
-            }
-            let comment = {
-                isCoach: current.isCoach,
-                sender,
-                content: current.content,
-                createDate: current.createDate
-            }
-            return [...acc, comment]
-        }, [])
-    }
+    comments = await challengeService.getComments(postId, postModel)
     res.status(200).json({
         comments
     })
@@ -313,214 +184,29 @@ let get_comments_by_postId = async (req, res) => {
  *          {req.body}
  * @returns string
  */
-let create_new_comment = async (req, res) => {
-    let _coach = null;
-    let _coachee = null;
-    let isCoach = false;
+const creatNewComment = async (req, res) => {
     let {
         content
     } = req.body
-
     let {
         postId
     } = req.params
+    let postModel = convertCategoryNameToModelName(req.query.challengeCategoryName)
+    let comment = await challengeService
+        .createComment(content, postId, req.user, postModel)
 
-    let {
-        userType,
-        _id
-    } = req.user
-    let post = {}
-    if (userType == "Coachee") {
-        _coachee = _id;
-    }
-
-    if (userType == "CommonCoach" || userType == "AdminCoach") {
-        isCoach = true;
-        _coach = _id
-    }
-    let newComment = {
-        isCoach: isCoach,
-        _coach: _coach,
-        _coachee: _coachee,
-        content: content,
-        createDate: new Date()
-    }
-    try {
-        await FoodJournalPost.findByIdAndUpdate(Types.ObjectId(postId), {
-            $push: {
-                comments: newComment
-            }
-        })
-        post = await FoodJournalPost
-            .findById(Types.ObjectId(postId))
-            .select({
-                comments: {
-                    "$elemMatch": {
-                        createDate: newComment.createDate
-                    }
-                }
-            })
-        let image = null
-        let sender = {
-            firstName: "",
-            lastName: "",
-            image: null
-        }
-        if (post.comments[0]._coach) {
-            if (post.comments[0]._coach.imgData !== null) {
-                image = "data:image/jpeg;base64," + Buffer.from(post.comments[0]._coach.imgData).toString('base64');
-            }
-            sender = {
-                firstName: post.comments[0]._coach.firstName,
-                lastName: post.comments[0]._coach.lastName,
-                image,
-            }
-        }
-        if (post.comments[0]._coachee) {
-            if (post.comments[0]._coachee.imgData !== null) {
-                image = "data:image/jpeg;base64," + Buffer.from(post.comments[0]._coachee.imgData).toString('base64');
-            }
-            sender = {
-                firstName: post.comments[0]._coachee.firstName,
-                lastName: post.comments[0]._coachee.lastName,
-                image
-            }
-        }
-        let comment = {
-            isCoach: post.comments[0].isCoach,
-            sender,
-            content: post.comments[0].content,
-            createDate: post.comments[0].createDate
-        }
-        return res.status(200).json({
-            comment
-        })
-    } catch (error) {
-        throw error
-    }
-}
-/**
- * get nonactive challenges
- * @param {*} req 
- * @param {*} res 
- */
-let get_nonactive_challenges = async (req, res) => {
-    let {
-        _id,
-        userType
-    } = req.user;
-    let _coachee = '';
-    let _challengeCategory = ""
-    let currentDate = new Date();
-    let nonactiveChallenges = [];
-    let challenges = []
-    if (userType.includes('Coachee')) {
-        _coachee = _id
-        _challengeCategory = req.query.challengeCategoryId;
-        challenges = await Challenge.find({
-            $and: [{
-                    _coachee
-                }, {
-                    _challengeCategory
-                },
-                {
-                    endDate: {
-                        $lte: currentDate
-                    }
-                },
-                {
-                    isObsolete: false
-                }
-            ]
-        })
-        .populate({
-            path: '_challengeCategory',
-            select:'name'
-         })
-        .populate({
-            path: 'posts._post',
-            select: 'rating'
-        })
-    } else {
-        _coachee = req.query.coacheeId;
-        challenges = await Challenge.find({
-            $and: [{
-                    _coachee
-                },
-                {
-                    endDate: {
-                        $lte: currentDate
-                    }
-                },
-                {
-                    isObsolete: false
-                }
-            ]
-        }).populate({
-            path: 'posts._post',
-            select: 'rating'
-        })
-
-    }
-    nonactiveChallenges = challenges.reduce((acc, current) => {
-        let totalRating = 0;
-        let averageRating = 0;
-        let ratedItems = 0;
-        let ratingDescription = ""
-        for (let i = 0; i < current.posts.length; i++) {
-            if (current.posts[i]._post.rating > 0) {
-                totalRating += current.posts[i]._post.rating;
-                ratedItems += 1
-            }
-        }
-        if (ratedItems > 0) {
-            averageRating = (totalRating / ratedItems).toFixed(1)
-            ratingDescription = _h.get_rating_description(averageRating)
-        }
-        let nonactiveChallenge = {
-            categoryName: current._challengeCategory.name,
-            averageRating,
-            ratingDescription,
-            ...JSON.parse(JSON.stringify(current))
-        }
-        return [nonactiveChallenge, ...acc]
-    }, [])
-    res.status(200).json({
-        nonactiveChallenges
+    return res.status(200).json({
+        comment
     })
 }
-/**
- * rate post
- * @param {*} req 
- * @param {*} res 
- */
-let rate_post = async (req, res) => {
-    let {
-        userType
-    } = req.user
-    let {
-        rating
-    } = req.body
-    let {
-        postId
-    } = req.params
-    if (userType.includes('Coachee')) throw new UserFacingError('can not rate post')
-    let post = await FoodJournalPost.findByIdAndUpdate((postId), {
-        $set: {
-            rating
-        }
-    })
-    res.status(200).json({
-        message: "rating successfully"
-    })
-}
+
 module.exports = {
-    create_challenge,
-    get_active_challenges,
-    create_new_post,
-    get_foodjournalposts_pagination_by_challengeId,
-    get_comments_by_postId,
-    create_new_comment,
-    get_nonactive_challenges,
-    rate_post
+    createChallenge,
+    getActiveChallenges,
+    getNonactiveChallenges,
+    getPostsByPagination,
+    createNewPost,
+    ratePost,
+    getCommentsByPostId,
+    creatNewComment
 }

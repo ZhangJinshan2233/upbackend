@@ -3,7 +3,11 @@ const mongoose = require('mongoose');
 const config = require('../config');
 const connection = mongoose.connection;
 const Coachee = require('./coachee');
-const {Coach,CommonCoach,AdminCoach }= require('./coach');
+const {
+    Coach,
+    CommonCoach,
+    AdminCoach
+} = require('./coach');
 const HabitCategory = require('./habitCategory');
 const Habit = require('./habit');
 const HabitlistRecord = require('./habitlistRecord');
@@ -13,17 +17,18 @@ const ChallengeCategory = require('./challengeCategory');
 const Challenge = require('./challenge');
 const ChatRoom = require('./chatRoom');
 const Message = require('./message')
-const FoodJournalPost = require('./foodJournalPost');
+const FoodDetectiveJournalPost = require('./foodDetectiveJournalPost');
+const SlumberTimeJournalPost = require('./slumberTimeJournalPost')
 const UnreadNotification = require('./unreadNotification');
 const MembershipCategory = require('./membershipCategory');
 const Membership = require('./membership');
 const HealthyTip = require('./healthyTip');
 const MemberRecord = require('./memberRcord');
-const CompanyCode=require('./companyCode');
-const AppCategory=require('./appCategory')
-const Category=require('./category');
-const Note=require('./note');
-const SpecialityCategory=require('./specialityCategory')
+const CompanyCode = require('./companyCode');
+const AppCategory = require('./appCategory')
+const Category = require('./category');
+const Note = require('./note');
+const SpecialityCategory = require('./specialityCategory')
 //fix deprecation warnings
 mongoose.set('useCreateIndex', true);
 mongoose.set('useFindAndModify', false);
@@ -58,7 +63,7 @@ module.exports = {
     IndicatorRecord,
     ChallengeCategory,
     Challenge,
-    FoodJournalPost,
+    FoodDetectiveJournalPost,
     ChatRoom,
     Message,
     UnreadNotification,
@@ -68,5 +73,6 @@ module.exports = {
     MemberRecord,
     CompanyCode,
     Note,
-    SpecialityCategory
+    SpecialityCategory,
+    SlumberTimeJournalPost
 }

@@ -8,40 +8,40 @@ Router
     .route('')
     .post(passport.authenticate('jwt', {
         session: false
-    }), challengeController.create_challenge)
+    }), challengeController.createChallenge)
 
 Router
     .route('/active')
     .get(passport.authenticate('jwt', {
         session: false
-    }), challengeController.get_active_challenges)
+    }), challengeController.getActiveChallenges)
 Router
     .route('/nonactive')
     .get(passport.authenticate('jwt', {
         session: false
-    }), challengeController.get_nonactive_challenges)
+    }), challengeController.getNonactiveChallenges)
 
 Router
     .route('/:challengeId/posts')
     .post(passport.authenticate('jwt', {
         session: false
-    }), challengeController.create_new_post)
+    }), challengeController.createNewPost)
     .get(passport.authenticate('jwt', {
         session: false
-    }), challengeController.get_foodjournalposts_pagination_by_challengeId)
+    }), challengeController.getPostsByPagination)
 
 Router
     .route('/posts/:postId/comments')
     .post(passport.authenticate('jwt', {
         session: false
-    }), challengeController.create_new_comment)
+    }), challengeController.creatNewComment)
     .get(passport.authenticate('jwt', {
         session: false
-    }), challengeController.get_comments_by_postId)
+    }), challengeController.getCommentsByPostId)
     
 Router
     .route('/posts/:postId/rating')
     .put(passport.authenticate('jwt', {
         session: false
-    }), challengeController.rate_post)
+    }), challengeController.ratePost)
 module.exports = Router
