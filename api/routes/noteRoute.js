@@ -1,18 +1,24 @@
 const Router = require('express').Router()
-
+const passport = require('passport')
 const {
     noteController
 } = require('../controllers')
 
 Router
     .route('')
-    .post(noteController.create_note)
-    .get(noteController.get_notes_pagination)
+    .post(passport.authenticate('jwt', {
+        session: false
+    }), noteController.createDocument)
+    .get( noteController.getAllDocuments)
 
 Router
-    .route('/:noteId')
-    .get(noteController.get_note_by_id)
-    .put(noteController.update_note)
+    .route('/:id')
+    .get(passport.authenticate('jwt', {
+        session: false
+    }), noteController.getDocumentById)
+    .put(passport.authenticate('jwt', {
+        session: false
+    }), noteController.updateDocumentById)
 
 
 

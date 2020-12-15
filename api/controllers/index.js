@@ -1,39 +1,37 @@
 'use strict';
-
+const articleController =require('./articleController')
+const videoController = require('./videoController')
+//class instantiation
 const authController = require('./authController');
-
 const coachController = require('./coachController');
-
 const coacheeController = require('./coacheeController');
-
-const habitController = require('./habitController');
-const habitlistRecordController = require('./habitlistRecordController');
 const indicatorController = require('./indicatorController');
 const indicatorRecordController = require('./indicatorRecordController');
 const challengeController = require('./challengeController');
 const chatController = require('./chatController');
 const unreadNotificationController = require('./unreadNotificationController');
-const membershipController = require('./membershipController');
-const healthyTipController = require('./healthyTipController');
-const memberRecordController = require('./memberRecordController');
-const companyCodeController=require('./companyCodeController');
-const categoryController=require('./categoryController');
-const noteController=require('./noteController')
+const memberController = require('./memberController')();
+const companyCodeController = require('./companyCodeController');
+const categoryController = require('./categoryController');
+const noteController = require('./noteController')
+const programmeController = require('./programmeController')
+const scheduledProgrammeController = require('./scheduledProgrammeController')
+
 module.exports = {
     authController,
     coachController,
     coacheeController,
-    habitController,
-    habitlistRecordController,
     indicatorController,
     indicatorRecordController,
     challengeController,
     chatController,
     unreadNotificationController,
-    membershipController,
-    healthyTipController,
-    memberRecordController,
+    memberController,
     companyCodeController,
     categoryController,
-    noteController
+    noteController,
+    videoController,
+    articleController,
+    programmeController,
+    scheduledProgrammeController
 };

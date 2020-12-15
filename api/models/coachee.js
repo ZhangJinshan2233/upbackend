@@ -44,17 +44,15 @@ const coacheeSchema = new Schema({
         type: String,
         required: true
     },
-    imgData: {
-        type: Buffer,
-        default:""
+    posterUrl: {
+        type: String
     },
-    imgType: {
-        type: String,
-        default: 'image/jpeg'
+    posterOriginalname: {
+        type: String
     },
     height: {
         type: Number,
-        default: 0
+        default: 0,
     },
     dateOfBirth: {
         type: Date,
@@ -62,15 +60,15 @@ const coacheeSchema = new Schema({
     },
     weight: {
         type: Number,
-        default: 0
+        default: 0,
     },
     phoneNumber: {
-        type: Number,
-        required: true
+        type: Number
     },
     goal:{
-        type:String,
-        default:""
+        type: Schema.Types.ObjectId,
+        ref: 'Category',
+        default: null,
     },
     firstTimeLogin: {
         type: Boolean,
@@ -80,14 +78,10 @@ const coacheeSchema = new Schema({
         type: Date,
         default: Date.now
     },
-    lifeStyleAssessments: [{
-        question: {
-            type: String
-        },
-        result: {
-            type: String
-        }
-    }]
+    addOns:{
+        type: Array,
+        default:[]
+    }
 }, {
     timestamps: {
         createdAt: 'createdAt',

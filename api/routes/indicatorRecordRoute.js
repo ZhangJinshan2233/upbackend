@@ -15,7 +15,9 @@ Router
 
 Router
     .route('/batchupload')
-    .post(indicatorRecordController.insert_multiple_coachees_records)
+    .post(passport.authenticate('jwt', {
+        session: false
+    }), indicatorRecordController.insert_multiple_coachees_records)
 Router
     .route('/pagination/:indicatorName')
     .get(passport.authenticate('jwt', {

@@ -1,22 +1,32 @@
 const {
     indicatorController
 } = require('../controllers');
-
+const passport = require('passport')
 const Router = require('express').Router()
 
 Router
     .route('')
-    .post(indicatorController.create_indicator)
-    .get(indicatorController.get_indicators)
+    .post(passport.authenticate('jwt', {
+        session: false
+    }),indicatorController.createDocument)
+    .get(passport.authenticate('jwt', {
+        session: false
+    }),indicatorController.getAllDocuments)
 
 Router
     .route('/count')
-    .get(indicatorController.get_indicator_total_numbers)
+    .get(passport.authenticate('jwt', {
+        session: false
+    }),indicatorController.getTotalNumbersOfDocuments)
     
 Router
 
-    .route('/:indicatorId')
-    .put(indicatorController.update_indicator)
-    .get(indicatorController.get_indicator_by_indicator_id)
+    .route('/:id')
+    .put(passport.authenticate('jwt', {
+        session: false
+    }),indicatorController.updateDocumentById)
+    .get(passport.authenticate('jwt', {
+        session: false
+    }),indicatorController.getDocumentById)
 
 module.exports = Router

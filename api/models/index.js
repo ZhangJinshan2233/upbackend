@@ -2,15 +2,17 @@
 const mongoose = require('mongoose');
 const config = require('../config');
 const connection = mongoose.connection;
+const {
+    once
+} = require('events')
 const Coachee = require('./coachee');
 const {
     Coach,
     CommonCoach,
-    AdminCoach
+    AdminCoach,
+    PartnerCoach
 } = require('./coach');
-const HabitCategory = require('./habitCategory');
-const Habit = require('./habit');
-const HabitlistRecord = require('./habitlistRecord');
+const Programme = require('./programme')
 const Indicator = require('./indicator');
 const IndicatorRecord = require('./indicatorRecord');
 const ChallengeCategory = require('./challengeCategory');
@@ -21,33 +23,57 @@ const FoodDetectiveJournalPost = require('./foodDetectiveJournalPost');
 const SlumberTimeJournalPost = require('./slumberTimeJournalPost')
 const UnreadNotification = require('./unreadNotification');
 const MembershipCategory = require('./membershipCategory');
-const Membership = require('./membership');
-const HealthyTip = require('./healthyTip');
+const MemberTransaction = require('./memberTransaction');
 const MemberRecord = require('./memberRcord');
 const CompanyCode = require('./companyCode');
 const AppCategory = require('./appCategory')
 const Category = require('./category');
 const Note = require('./note');
+const {
+    Video,
+    StudioVideo,
+    TipVideo
+} = require('./video')
+const {
+    MediaSubcategory,
+    StudioVideoMainCategory,
+    TipVideoMainCategory,
+    LearnArticleMainCategory
+} = require('./mediaCategory');
+const GcpMedia = require('./GcpMedia')
 const SpecialityCategory = require('./specialityCategory')
+const {
+    ScheduledProgramme,
+    CorporateScheduledProgramme
+} = require('./scheduledProgramme')
+const GoalCategory = require('./goalCategory');
+const {
+    Article,
+    LearnArticle
+} = require('./article')
 //fix deprecation warnings
 mongoose.set('useCreateIndex', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set("useUnifiedTopology", true);
-mongoose.connect(config.dbUrl, {
-    socketTimeoutMS: 3000000,
-    keepAlive: 3000000,
-    useNewUrlParser: true,
-    // autoIndex: false
-})
+async function initialize() {
+    mongoose.connect(config.dbUrl, {
+        socketTimeoutMS: 3000000,
+        keepAlive: 3000000,
+        useNewUrlParser: true,
+        // autoIndex: false
+    })
+    await once(connection, 'open')
+}
 
-connection.on('open', function () {
-    console.log('MongoDB database connection established successfully!');
-});
+initialize()
+    .then(() => {
+        console.log('MongoDB database connection established successfully!');
+    })
+    .catch((err) => {
+        console.log("MongoDB connection error. Please make sure MongoDB is running. " + err);
+        process.exit();
+    })
 
-connection.on('error', function (err) {
-    console.log("MongoDB connection error. Please make sure MongoDB is running. " + err);
-    process.exit();
-})
 
 module.exports = {
     Coachee,
@@ -56,9 +82,6 @@ module.exports = {
     Category,
     CommonCoach,
     AdminCoach,
-    HabitCategory,
-    Habit,
-    HabitlistRecord,
     Indicator,
     IndicatorRecord,
     ChallengeCategory,
@@ -68,11 +91,25 @@ module.exports = {
     Message,
     UnreadNotification,
     MembershipCategory,
-    Membership,
-    HealthyTip,
+    MemberTransaction,
     MemberRecord,
     CompanyCode,
     Note,
     SpecialityCategory,
-    SlumberTimeJournalPost
+    SlumberTimeJournalPost,
+    MediaSubcategory,
+    StudioVideoMainCategory,
+    Video,
+    StudioVideo,
+    TipVideo,
+    Programme,
+    GcpMedia,
+    ScheduledProgramme,
+    CorporateScheduledProgramme,
+    GoalCategory,
+    TipVideoMainCategory,
+    LearnArticleMainCategory,
+    Article,
+    LearnArticle,
+    PartnerCoach
 }

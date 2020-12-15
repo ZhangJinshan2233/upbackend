@@ -6,6 +6,20 @@ const {
     Coachee,
     MemberRecord
 } = require('../models');
+const {
+    deleteFile,
+    uploadPhoto,
+    getGCPName
+} = require('../service/mediaHelper');
+
+const {
+    GCP
+} = require('../config');
+
+const uploadOptions={
+    bucketName:GCP.mediaBucket,
+    imageDestination:'profileimages'
+}
 const _h = require('../helpers');
 const bcrypt = require('bcrypt');
 const randToken = require('rand-token');
@@ -95,7 +109,7 @@ let forgot_password = async (req, res) => {
     }
     currentUser = coachee ? coachee : coach;
     if (!currentUser) throw new UserFacingError('Non-existd email')
-    let randPassword = randToken.uid(6);
+    let randPassword = randToken.uid(8);
     let salt = bcrypt.genSaltSync(10);
     let hash = bcrypt.hashSync(randPassword, salt);
     await currentUser.updateOne({
@@ -121,59 +135,24 @@ let get_whole_userInfo = async (req, res, next) => {
         userType
     } = req.user
     if (userType == "Coachee") {
-        let coachee = await Coachee.findById(_id)
-            .populate('_coach', '_id firstName lastName imgType imgData')
-        let deserializationCoachee = JSON.parse(JSON.stringify(coachee))
-
-        let {
-            imgData: coacheeImgData,
-            _coach,
-            ...theRestOfPropertiesCoachee
-        } = deserializationCoachee
-
-        let {
-            imgData: coachImgData,
-            ...theRestOfPropertiesCoach
-        } = _coach
-
-        coachImgData ? coachImgData = Buffer.from(coachImgData).toString('base64') : coachImgData = ""
-        coacheeImgData ? coacheeImgData = Buffer.from(coacheeImgData).toString('base64') : coacheeImgData = ""
-
-        let coach = {
-            imgData: coachImgData,
-            ...theRestOfPropertiesCoach
-        }
-        currentUser = {
-            imgData: coacheeImgData,
-            _coach: coach,
-            ...theRestOfPropertiesCoachee
-        }
+        let coachee = await Coachee
+            .findById(_id)
+            .populate('_coach', '_id firstName lastName posterUrl')
+        currentUser = JSON.parse(JSON.stringify(coachee))
     } else {
         let coach = {}
         if (userType == 'CommonCoach') {
             //if have some special property need use model which have this property
-            coach = await CommonCoach.findById(_id).populate({
-                path: 'specialities._speciality',
-                select: 'name'
-            })
+            coach = await CommonCoach
+                .findById(_id).populate({
+                    path: 'specialities._speciality',
+                    select: 'name'
+                })
         } else {
             coach = await AdminCoach.findById(_id)
         }
         //prevent theRestOfPropertiesCoach passing parent class of coach object
-        let deserializationCoach = JSON.parse(JSON.stringify(coach))
-        let {
-            imgData,
-            ...theRestOfPropertiesCoach
-        } = deserializationCoach
-        let coachImgData = ""
-        if (imgData) {
-            coachImgData = Buffer.from(imgData).toString('base64')
-        }
-        currentUser = {
-            imgData: coachImgData,
-            ...theRestOfPropertiesCoach
-        }
-
+        currentUser = JSON.parse(JSON.stringify(coach))
     }
     return res.status(200).json({
         currentUser
@@ -236,33 +215,32 @@ let update_profile_field = async (req, res) => {
         _id,
         userType
     } = req.user;
-    let changedFields = req.body
+    let changedFields = {};
     let currentUser = {}
     if (userType === 'Coachee') {
         currentUser = await Coachee.findById(_id)
     } else {
         currentUser = await CommonCoach.findById(_id)
     }
-    if (Object.keys(req.body).includes('imgData')) {
-        let {
-            imgData,
-            ...otherProperties
-        } = req.body
-        let bufferImgData = Buffer.from(imgData, 'base64')
-        await currentUser.updateOne({
-            $set: {
-                imgData: bufferImgData,
-                ...otherProperties
-            }
-        }).exec()
+    if (typeof (req.files) !== "undefined" && req.files['poster'][0]) {
+        let posterFile = req.files['poster'][0];
+        const newPoster = await uploadPhoto(uploadOptions, posterFile);
+        if (currentUser.posterUrl) {
+            await deleteFile(uploadOptions.bucketName, getGCPName(currentUser.posterUrl));
+        }
+        changedFields = {
+            ...newPoster
+        }
     } else {
-        await currentUser.updateOne({
-            $set: {
-                ...changedFields
-            }
-        }).exec()
+        changedFields = {
+            ...req.body
+        }
     }
-
+    await currentUser.updateOne({
+        $set: {
+            ...changedFields
+        }
+    }).exec()
     res.status(200).json({
         message: "updated successfully"
     })

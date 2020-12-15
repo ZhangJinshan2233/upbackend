@@ -27,10 +27,11 @@ let create_token = (user) => {
             _id: user._id,
             email: user.email,
             userType: user.userType,
-            firstTimeLogin: user.firstTimeLogin
+            firstTimeLogin: user.firstTimeLogin,
+            goal:user.goal
         },
         config.jwtSecret, {
-            expiresIn: 15000
+            expiresIn: 5
         })
 }
 /**
@@ -55,18 +56,18 @@ let create_transport = (user, pass) => {
  * @param {*} newCoachees 
  */
 let send_multiple_welcome_email = (newCoachees) => {
-    let emailContent = "Welcome to the UP Health community. " +
+    let emailContent = "Welcome to the FLOURISH community. " +
         "You'll find no where like this where great place where" +
         " friendships meet professional coaching so that becoming " +
         "healthy becomes more fun and desirable. " +
         "We can't wait for you to join us and work " +
         "toward achieving your health goals together."
-    let subjectData = "Registration from UPHealth";
+    let subjectData = "Registration from FLOURISH";
     let transporter = create_transport(config.welcomeEmailAuth.user, config.welcomeEmailAuth.pass)
     let sendPromises = []
     newCoachees.forEach(newCoachee => {
         let htmlData =
-            "<html>Hey " + newCoachee.firstName + ",<br/><br/>" + emailContent + "<br/><br/><Table><TR ALIGN='Left'><TD><a href='http://www.uphealth.sg'><img src='http://user-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/88884/145502_842983.png' height='150' alt='UP logo'></a></TD><TD>Cheering you on,<br>UP Welcome Team <br>T: (+65) 6743 4010<br>W: uphealth.sg <br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
+            "<html>Hey " + newCoachee.firstName + ",<br/><br/>" + emailContent + "<br/><br/><Table><TR ALIGN='Left'><TD></TD><TD>Cheering you on,<br>FLOURISH Welcome Team <br>T: (+65) 6743 4010<br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
         let sendPromise = transporter.sendMail({
             from: config.welcomeEmail,
             to: newCoachee.email,
@@ -108,16 +109,16 @@ let organize_email = async (user, pass, fromEmail, toEmail, subjectData, htmlDat
  * @returns 
  */
 let send_welcome_email = (toEmail, firstName) => {
-    let emailContent = "Welcome to UP Health. " +
+    let emailContent = "Welcome to FLOURISH. " +
         "You'll find no where like this where great place where" +
         " friendships meet professional coaching so that becoming " +
         "healthy becomes more fun and desirable. " +
         "We can't wait for you to join us and work " +
         "toward achieving your health goals together."
 
-    let subjectData = "Welcome to the UP Health";
+    let subjectData = "Welcome to the FLOURISH";
     let htmlData =
-        "<html>Hey " + firstName + ",<br/><br/>" + emailContent + "<br/><br/><Table><TR ALIGN='Left'><TD><a href='http://www.uphealth.sg'><img src='http://user-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/88884/145502_842983.png' height='150' alt='UP logo'></a></TD><TD>Cheering you on,<br>UP Welcome Team <br>T: (+65) 6743 4010<br>W: uphealth.sg <br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
+        "<html>Hey " + firstName + ",<br/><br/>" + emailContent + "<br/><br/><Table><TR ALIGN='Left'><TD><a href='http://www.proage.sg/'></a></TD><TD>Cheering you on,<br>FLOURISH Welcome Team <br>T: (+65) 6743 4010<br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
     organize_email(config.welcomeEmailAuth.user,
         config.welcomeEmailAuth.pass,
         config.welcomeEmail,
@@ -136,7 +137,7 @@ let send_support_email = async (toEmail, firstName, randPassword) => {
     let htmlData =
         "<html>Hey " + firstName +
         ",<br/><br/> We've glad to have changed your password to " + "<p style='color:red'>" + randPassword + "</p>" +
-        " so that you're able to login and connect with your UP Community soon!<br/><br/>You may change the password again if you like in your Settings page in our app.<br/><br/><Table><TR ALIGN='Left'><TD><a href='http://www.uphealth.sg'><img src='http://user-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/88884/145502_842983.png' height='150' alt='UP logo'></a></TD><TD>Cheering you on,<br>UP Welcome Team <br>T: (+65) 6743 4010<br>W: uphealth.sg <br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
+        " so that you're able to login and connect with your FLOURISH Community soon!<br/><br/>You may change the password again if you like in your Settings page in our app.<br/><br/><Table><TR ALIGN='Left'><TD></a></TD><TD>Cheering you on,<br>FLOURISH Welcome Team <br>T: (+65) 6743 4010<br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
     organize_email(config.supportEmailAuth.user,
         config.supportEmailAuth.pass,
         config.supportEmail,

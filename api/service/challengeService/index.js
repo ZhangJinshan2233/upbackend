@@ -52,17 +52,21 @@ module.exports = () => {
      * @param {*} endDate 
      */
     challengeService.createChallenge = async (_coachee, _challengeCategory, startDate, endDate) => {
-        let newChallengePromise = Models.Challenge.create({
-            _coachee,
-            _challengeCategory,
-            startDate: new Date(startDate),
-            endDate: new Date(endDate)
-        })
+        let newChallengePromise = Models
+            .Challenge
+            .create({
+                _coachee,
+                _challengeCategory,
+                startDate: new Date(startDate),
+                endDate: new Date(endDate)
+            })
 
-        let challengeCategoryPromise = Models.ChallengeCategory
+        let challengeCategoryPromise = Models
+            .ChallengeCategory
             .findById(_challengeCategory)
 
-        let [newChallenge, challengeCategory] = await Promise.all([newChallengePromise, challengeCategoryPromise])
+        let [newChallenge, challengeCategory] = await Promise
+            .all([newChallengePromise, challengeCategoryPromise])
         let image = `data:${challengeCategory.imgType};base64,` + Buffer.from(challengeCategory.imgData).toString('base64');
 
         let activeChallenge = {
@@ -79,7 +83,8 @@ module.exports = () => {
      */
     challengeService.getActiveChallenges = async (coacheeId) => {
         let activeChallenges = [];
-        let challenges = await Models.Challenge.find({
+        let challenges = await Models.Challenge
+            .find({
                 $and: [{
                         _coachee: coacheeId
                     },
@@ -101,36 +106,37 @@ module.exports = () => {
                 select: 'rating'
             })
         if (challenges.length > 0) {
-            activeChallenges = challenges.reduce((acc, current) => {
-                let image = `data:${current._challengeCategory.imgType};base64,` + Buffer.from(current._challengeCategory.imgData).toString('base64');
-                let totalRating = 0;
-                let averageRating = 0;
-                let ratedItems = 0;
-                if (current.posts.length > 0) {
-                    for (let i = 0; i < current.posts.length; i++) {
-                        if (current.posts[i]._post) {
-                            if (current.posts[i]._post.rating > 0) {
-                                totalRating += current.posts[i]._post.rating;
-                                ratedItems += 1
+            activeChallenges = challenges
+                .reduce((acc, current) => {
+                    let image = `data:${current._challengeCategory.imgType};base64,` + Buffer.from(current._challengeCategory.imgData).toString('base64');
+                    let totalRating = 0;
+                    let averageRating = 0;
+                    let ratedItems = 0;
+                    if (current.posts.length > 0) {
+                        for (let i = 0; i < current.posts.length; i++) {
+                            if (current.posts[i]._post) {
+                                if (current.posts[i]._post.rating > 0) {
+                                    totalRating += current.posts[i]._post.rating;
+                                    ratedItems += 1
+                                }
                             }
-                        }
 
+                        }
+                        averageRating = (totalRating / ratedItems).toFixed(1)
                     }
-                    averageRating = (totalRating / ratedItems).toFixed(1)
-                }
-                let {
-                    _challengeCategory,
-                    ...restProperiesOfCurrent
-                } = JSON.parse(JSON.stringify(current))
-                let activeChallenge = {
-                    categoryName: current._challengeCategory.name,
-                    categoryImage: image,
-                    averageRating,
-                    _challengeCategory: _challengeCategory._id,
-                    ...restProperiesOfCurrent
-                }
-                return [activeChallenge, ...acc]
-            }, [])
+                    let {
+                        _challengeCategory,
+                        ...restProperiesOfCurrent
+                    } = JSON.parse(JSON.stringify(current))
+                    let activeChallenge = {
+                        categoryName: current._challengeCategory.name,
+                        categoryImage: image,
+                        averageRating,
+                        _challengeCategory: _challengeCategory._id,
+                        ...restProperiesOfCurrent
+                    }
+                    return [activeChallenge, ...acc]
+                }, [])
         }
         return activeChallenges
     }
@@ -141,7 +147,8 @@ module.exports = () => {
      */
     challengeService.getNonactiveChallengesByCoachee = async (coacheeId, challengeCategoryId) => {
         let challenges = [];
-        challenges = await Models.Challenge.find({
+        challenges = await Models.Challenge
+            .find({
                 $and: [{
                         _coachee: coacheeId
                     }, {
@@ -213,7 +220,8 @@ module.exports = () => {
         const collectionName = `${postModel.toLowerCase()}s`;
         let journal = [];
         let journalPosts = [];
-        journal = await Models.Challenge.aggregate([{
+        journal = await Models.Challenge
+        .aggregate([{
                 $match: {
                     _id: Types.ObjectId(challengeId)
                 }

@@ -15,14 +15,11 @@ const coachSchema = new Schema({
         lowercase: true,
         trim: true
     },
-    imgData: {
-        type: Buffer,
-        default: ""
+    posterUrl: {
+        type: String
     },
-
-    imgType: {
-        type: String,
-        default: 'image/jpeg'
+    posterOriginalname: {
+        type: String
     },
     password: {
         type: String,
@@ -40,12 +37,8 @@ const coachSchema = new Schema({
         type: String,
         required: true
     },
-    dateOfBirth: {
-        type: Date
-    },
     phoneNumber: {
-        type: Number,
-        required: true
+        type: Number
     },
     status: {
         type: Boolean,
@@ -99,6 +92,18 @@ const CommonCoach = Coach.discriminator('CommonCoach', new Schema({
     }]
 }))
 
+//for coach who don't work in ProAge
+const PartnerCoach = Coach.discriminator('PartnerCoach', new Schema({
+    
+    specialities: [{
+        _id: false,
+       _speciality:{
+        type: Schema.Types.ObjectId,
+        ref: 'SpecialityCategory',
+        default: null,
+       }
+    }]
+}))
 const AdminCoach = Coach.discriminator('AdminCoach', new Schema({
     coachees: [{
         _id: false,
@@ -112,5 +117,6 @@ const AdminCoach = Coach.discriminator('AdminCoach', new Schema({
 module.exports = {
     Coach,
     CommonCoach,
-    AdminCoach
+    AdminCoach,
+    PartnerCoach
 }

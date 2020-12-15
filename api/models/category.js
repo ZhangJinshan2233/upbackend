@@ -3,7 +3,7 @@ const {
     Schema,
     model
 } = require('mongoose')
-var options = {
+const options = {
     discriminatorKey: 'kind'
 };
 const categorySchema = new Schema({

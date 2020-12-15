@@ -4,7 +4,7 @@ const {
 } = require('../controllers');
 
 const passport = require('passport')
-
+const multer = require('multer');
 Router
     .route('/signin')
     .post(authController.signin)
@@ -17,7 +17,14 @@ Router
 
     .post(passport.authenticate('jwt', {
         session: false
-    }), authController.update_profile_field)
+    }),multer({
+        limits: {
+            fileSize: 1024 * 1024 * 8
+        }
+    }).fields([{
+        name: 'poster',
+        maxCount: 1
+    }]), authController.update_profile_field)
 
 
 

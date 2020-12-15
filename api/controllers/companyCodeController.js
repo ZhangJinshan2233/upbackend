@@ -1,132 +1,47 @@
 'use strict'
-const {
-    CompanyCode
-} = require('../models')
 const randomCode = require('rand-token');
-const {UserFacingError} = require('../middlewares').errorHandler
-/**
- * create new company code
- * @param {} req 
- * @param {*} res 
- */
-let create_company_code = async (req, res) => {
-    let {
-        companyName,
-        description
-    } = req.body
-
-    let company = await CompanyCode.findOne({
-        companyName: companyName
-    })
-
-    if (company) {
-        throw new UserFacingError('company name or code existed')
+const Controller = require('./Controller');
+const {CompanyCode}=require('../models');
+const safeAwait = require('safe-await');
+const {
+    companyCodeService
+} = require('../service')
+const {
+    UserFacingError
+} = require('../middlewares').errorHandler
+class CompanyCodeController extends Controller {
+    constructor(service) {
+        super(service);
+        this.service = service
     }
 
-    let code = randomCode.generate(6).toLowerCase()
-
-    let companyCode = await CompanyCode.create({
-        code,
-        companyName,
-        description
-    })
-
-    if (!companyCode) throw new UserFacingError("failed to create code")
-    res.status(200).json({
-        companyCode
-    })
-}
-
-/**
- * get company infos
- * @param {*} req 
- * @param {*} res 
- */
-
-let get_companyCodes_pagiantion = async (req, res) => {
-    let queryParams = req.query
-    let filter = ""
-    let pageSize = 3
-    let numSort = -1
-    let companyCodes = []
-    let {
-        sortOrder
-    } = queryParams;
-    filter = queryParams.filter
-    numSort = sortOrder == 'asc' ? 1 : -1
-    pageSize = parseInt(queryParams.pageSize)
-    let pageNumber = parseInt(queryParams.pageNumber) || 0
-    try {
-        companyCodes = await CompanyCode
-            .find({
-                companyName: {
-                    $regex: filter
-                }
-            })
-            .sort({
-                'companyName': numSort
-            })
-            .skip(pageNumber * pageSize)
-            .limit(pageSize)
-        res.status(200).json({
-            companyCodes
+    /**
+     * create new document
+     * @param {*} req 
+     * @param {*} res 
+     */
+    createDocument = async (req, res) => {
+        let company = await CompanyCode.findOne({
+            companyName: req.body.companyName
         })
-    } catch (error) {
-        throw new UserFacingError('get healthytips error')
-    }
-};
-
-/**
- * update one companyCode based on companyCode id
- * @param {*} req 
- * @param {*} res 
- */
-let update_companyCode = async (req, res) => {
-    let {
-        companyCodeId: _id
-    } = req.params
-    await CompanyCode.findByIdAndUpdate(_id, {
-        $set: {
-            ...req.body
+        if (company) {
+            throw new UserFacingError('company name or code existed')
         }
-    })
-    res.status(200).json({
-        message: "updated successfully"
-    })
-};
-/**
- * get companyCode by companyCode id
- * @param {*} req 
- * @param {*} res 
- */
-let get_companyCode = async (req, res) => {
-    let companyCode = {}
-    let {
-        companyCodeId: _id
-    } = req.params
-    companyCode = await CompanyCode.findById(_id)
-    //prevent theRestOfPropertiesCoach passing parent class of coach object
-
-    res.status(200).json({
-        companyCode
-    })
+        let document = {}
+        let code = randomCode.generate(6).toLowerCase()
+        Object.assign(document, req.body, {
+            code: code
+        })
+        const [err, newDocument] = await safeAwait(
+            this.service
+            .createDocument(document)
+        )
+        if (err) throw new Error('upload wrongly')
+        res.status(200).json({
+            newDocument: JSON.parse(JSON.stringify(newDocument))
+        })
+    };
 }
 
-/**
- * get total companyCode numbers
- */
-
-let get_companyCode_total_numbers = async (req, res) => {
-    let numCompanyCodes = 0;
-    numCompanyCodes = await CompanyCode.estimatedDocumentCount()
-    res.status(200).json({
-        numCompanyCodes
-    })
-}
-module.exports = {
-    create_company_code,
-    get_companyCodes_pagiantion,
-    get_companyCode_total_numbers,
-    get_companyCode,
-    update_companyCode
-}
+const companyCodeController = new CompanyCodeController(companyCodeService)
+module.exports = companyCodeController

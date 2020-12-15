@@ -1,5 +1,7 @@
-const Model = require('../models')
-const {UserFacingError} = require('../middlewares').errorHandler
+const Models = require('../models')
+const {
+    UserFacingError
+} = require('../middlewares').errorHandler
 /**
  * create new  category('challenge category','habit category',
  * 'membership category',and 'app vrsion category')
@@ -7,28 +9,27 @@ const {UserFacingError} = require('../middlewares').errorHandler
  */
 let create_category = async (req, res) => {
     let {
-        name
-    } = req.body
-    let category = await Model.Category.findOne({
-        name: name
-    });
-    if (category) throw new UserFacingError('name has existed already')
-    let newCategory = {};
-    let {
-        imgData,
+        name,
         kind,
+        imgData,
         ...otherProperties
     } = req.body
 
     if (!kind) throw UserFacingError('please selected kind of categories')
+    let category = await Models.Category.findOne({
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        kind: kind
+    });
+    if (category) throw new UserFacingError('name has existed already')
     let bufferImgData = null
-
     if (imgData) {
         bufferImgData = Buffer.from(imgData, 'base64')
     }
 
-    newCategory = await Model[kind].create({
+    const newCategory = await Models[kind].create({
         imgData: bufferImgData,
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        kind,
         ...otherProperties
     })
 
@@ -56,11 +57,16 @@ let get_categories = async (req, res) => {
     pageSize = parseInt(queryParams.pageSize)
     pageNumber = parseInt(queryParams.pageNumber) || 0
     try {
-        categories = await Model.Category
+        categories = await Models.Category
             .find({
                 $and: [{
                         kind: {
-                            $regex: filter
+                            $nin: ['AppCategory', 'HabitCategory']
+                        }
+                    },
+                    {
+                        kind: {
+                            $regex: filter.charAt(0).toUpperCase() + filter.slice(1),
                         }
                     }
                 ]
@@ -88,7 +94,9 @@ let get_category_by_id = async (req, res) => {
         categoryId: _id
     } = req.params;
     let category = {}
-    let currentCategory = await Model.Category.findById(_id)
+    let currentCategory = await Models.Category.findById(_id).populate({
+        path: 'mediaSubcategories._mediaSubcategory'
+    })
     let jsonCategory = JSON.parse(JSON.stringify(currentCategory))
     if (Object.keys(jsonCategory).includes('imgData')) {
         let {
@@ -129,7 +137,7 @@ let update_category = async (req, res) => {
     if (imgData) {
         bufferImgData = Buffer.from(imgData, 'base64')
     }
-    await Model[kind].findByIdAndUpdate(
+    await Models[kind].findByIdAndUpdate(
         _id, {
             $set: {
                 imgData: bufferImgData,
@@ -149,7 +157,11 @@ let update_category = async (req, res) => {
 
 let get_categories_total_numbers = async (req, res) => {
     let numCategories = 0;
-    numCategories = await Model.Category.estimatedDocumentCount()
+    numCategories = await Models.Category.countDocuments({
+        kind: {
+            $nin: ['AppCategory','HabitCategory']
+        }
+    })
     res.status(200).json({
         numCategories
     })
@@ -161,7 +173,12 @@ let get_categories_total_numbers = async (req, res) => {
 
 let get_kinds = async (req, res) => {
     let kinds = []
-    kinds = await Model.Category.distinct('kind')
+    kinds = Object.keys(Models.Category.discriminators).filter(kind => {
+        if (!['AppCategory','SpecialityCategory'].includes(kind)) {
+            return true
+        }
+    })
+
     res.status(200).json({
         kinds
     })
@@ -174,8 +191,14 @@ let get_categories_by_kind = async (req, res) => {
     let {
         kind
     } = req.query;
-    let currentCategories = await Model.Category.find({
-       $and:[{kind:kind},{isObsolete:false}]
+    let currentCategories = await Models.Category.find({
+        $and: [{
+            kind: kind
+        }, {
+            isObsolete: false
+        }]
+    }).populate({
+        path: 'mediaSubcategories._mediaSubcategory'
     })
     let categories = []
     if (kind === "ChallengeCategory") {

@@ -7,7 +7,9 @@ const {
 
 Router
     .route('')
-    .get(coacheeController.get_coachees_pagination)
+    .get(passport.authenticate('jwt', {
+        session: false
+    }),coacheeController.get_coachees_pagination)
 
 Router
     .route('/signup')
@@ -15,7 +17,9 @@ Router
 
 Router
     .route('/batchupload')
-    .post(coacheeController.multiple_signup)
+    .post(passport.authenticate('jwt', {
+        session: false
+    }),coacheeController.multiple_signup)
     
 Router
     .route('/count')
@@ -23,21 +27,20 @@ Router
 
 Router
     .route('/assignCoach')
-    .post(coacheeController.assign_coach)
+    .post(passport.authenticate('jwt', {
+        session: false
+    }),coacheeController.assign_coach)
 
 Router
     .route('/assignGroup')
-    .post(coacheeController.assign_group)
-
-Router
-    .route('/addRecommendedHabits')
     .post(passport.authenticate('jwt', {
         session: false
-    }), coacheeController.insert_recommended_habits)
-
+    }),coacheeController.assign_group)
 Router
     .route('/:coacheeId')
-    .get(coacheeController.get_coachee_by_coacheeId)
+    .get(passport.authenticate('jwt', {
+        session: false
+    }),coacheeController.get_coachee_by_coacheeId)
 
 
 

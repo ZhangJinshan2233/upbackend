@@ -3,17 +3,20 @@ const {
     model
 } = require('mongoose')
 
-memberRecordSchema = new Schema({
-    _coachee: {
-        type: Schema.Types.ObjectId,
-        ref: 'Coachee'
+MemberRecordSchema = new Schema({
+    isActivated: {
+        type: Boolean,
+        default: true
     },
-    memberships:[{
-        _membership:{
-            type:Schema.Types.ObjectId,
-            ref:'Membership'
-        }
-    }],
+    userModel: {
+        type: String,
+        required: true,
+        enum:['Coachee']
+    },
+    user: {
+        type: Schema.Types.ObjectId,
+        refPath: 'userModel'
+    },
     expireAt: {
         type: Date,
         default: Date.now,
@@ -23,8 +26,9 @@ memberRecordSchema = new Schema({
     }
 }, {
     timestamps: {
-        createdAt: "createdAt"
+        createdAt: 'createdAt'
     }
 })
+const MemberRecord = model('MemberRecord', MemberRecordSchema)
 
-module.exports = model('MemberRecord', memberRecordSchema)
+module.exports = MemberRecord

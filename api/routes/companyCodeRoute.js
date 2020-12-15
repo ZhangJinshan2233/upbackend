@@ -1,19 +1,29 @@
 const {
     companyCodeController
 } = require('../controllers');
-
+const passport = require('passport');
 const Router = require('express').Router()
 
 Router
     .route('')
-    .post(companyCodeController.create_company_code)
-    .get(companyCodeController.get_companyCodes_pagiantion)
+    .post(passport.authenticate('jwt', {
+        session: false
+    }),companyCodeController.createDocument)
+    .get(passport.authenticate('jwt', {
+        session: false
+    }),companyCodeController.getAllDocuments)
 Router
     .route('/count')
-    .get(companyCodeController.get_companyCode_total_numbers)
+    .get(passport.authenticate('jwt', {
+        session: false
+    }),companyCodeController.getTotalNumbersOfDocuments)
 Router
-    .route('/:companyCodeId')
-    .get(companyCodeController.get_companyCode)
-    .put(companyCodeController.update_companyCode)
+    .route('/:id')
+    .get(passport.authenticate('jwt', {
+        session: false
+    }),companyCodeController.getDocumentById)
+    .put(passport.authenticate('jwt', {
+        session: false
+    }),companyCodeController.updateDocumentById)
 
 module.exports = Router

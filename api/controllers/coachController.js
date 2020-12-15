@@ -1,31 +1,36 @@
 const {
     Coach,
     Coachee,
-    CommonCoach,
     UnreadNotification,
     Indicator,
-    HabitlistRecord,
     IndicatorRecord,
     MemberRecord
 } = require('../models')
-const Model = require('../models')
+const Models = require('../models')
+
 const {
-    get_week_habitlist,
-    convert_time_to_localtime
-} = require('../helpers')
-const {
-    differenceInCalendarDays,
-    subDays,
-    format,
-    getDay,
-    isSameDay
+    differenceInCalendarDays
 } = require('date-fns')
+const {
+    deleteFile,
+    uploadPhoto,
+    getGCPName
+} = require('../service/mediaHelper');
+
+const {
+    GCP
+} = require('../config')
 const {
     Types
 } = require('mongoose');
 const {
     UserFacingError
 } = require('../middlewares').errorHandler
+
+const uploadOptions={
+    bucketName:GCP.mediaBucket,
+    imageDestination:'profileimages'
+}
 /**
  * @function signup.
  * @public
@@ -35,17 +40,20 @@ const {
 let signup = async (req, res) => {
     let {
         email,
-        imgData,
+        firstName,
         userType,
         ...remainingProperties
     } = req.body
-    let newCoach = {};
-    let bufferImgData = null;
-
-    let type = userType || "CommonCoach"
-
+    if (typeof (userType) == 'undefined')
+        throw new UserFacingError('You need to input required information')
     if (!email)
         throw new UserFacingError('You need to input required information')
+
+    if (typeof (req.files) !== "undefined" && req.files['poster'][0]) {
+        let posterFile = req.files['poster'][0];
+        const newPoster = await uploadPhoto(uploadOptions, posterFile);
+        Object.assign(remainingProperties, newPoster)
+    }
     try {
         let coacheePromise = Coachee.findOne({
             email: email
@@ -57,16 +65,13 @@ let signup = async (req, res) => {
 
         let coachAndCoachee = await Promise.all([coachPromise, coacheePromise])
         coach = coachAndCoachee[0];
-
         coachee = coachAndCoachee[1];
 
         if (coach || coachee) throw new UserFacingError('email already existed');
-        if (imgData) {
-            bufferImgData = Buffer.from(imgData, 'base64')
-        }
-        newCoach = await Model[type].create({
+        let newCoach = await Models[userType].create({
             email,
-            imgData: bufferImgData,
+            firstName,
+            password: firstName + '12345678',
             ...remainingProperties
         })
 
@@ -94,8 +99,6 @@ let get_coachees_pagination = async (req, res) => {
     let _indicatorPromise = Indicator.findOne({
         name: "Weight"
     }).select('_id').exec()
-
-    let daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     coacheesPromise = Coachee.find({
             _coach: _id
         })
@@ -183,139 +186,17 @@ let get_coachees_pagination = async (req, res) => {
             if (latestWeightRecord) {
                 changedWeight = (latestWeightRecord.value - coachee.weight).toFixed(1)
             }
-
-            let averageCompletedPercent = 0;
-
-            if (memberRecord) { //judge coachee is member or not 
-                let totalCompletedPercent = 0;
-                //get habits of each day of week
-                let haveHabitDays = 0;
-                let {
-                    endOfDay
-                } = convert_time_to_localtime(format(subDays(new Date(), 1), 'MM/dd/yyyy'))
-
-
-                let {
-                    startOfDay
-                } = convert_time_to_localtime(format(subDays(new Date(), 7), 'MM/dd/yyyy'))
-
-                let weekHabitlistPromise = get_week_habitlist(coachee._id)
-
-                //get habit records of last seven days
-                let habitsOfLastSevenDaysPromise = HabitlistRecord.find({
-                    $and: [{
-                            _coachee: coachee._id
-                        },
-                        {
-                            createDate: {
-                                "$gte": startOfDay
-                            }
-                        }, {
-                            createDate: {
-                                "$lte": endOfDay
-                            }
-                        }
-                    ]
-                });
-                let weekListAndLastSevenDays = await Promise.all([weekHabitlistPromise, habitsOfLastSevenDaysPromise])
-                weekHabitlist = weekListAndLastSevenDays[0]
-                habitsOfLastSevenDays = weekListAndLastSevenDays[1]
-                //get days of member
-                let differenceDays = differenceInCalendarDays(new Date(), memberRecord.createdAt)
-                // judge days of member less than 7
-                if (differenceDays < 7) {
-                    if (differenceDays < 1) {
-                        averageCompletedPercent = 1
-                    } else {
-                        for (let i = 1; i <= differenceDays; i++) {
-                            let completedHabitPercent = 0;
-                            let day = getDay(subDays(new Date(), i))
-                            habitsOfSpecialDay = weekHabitlist.filter(item => {
-                                return item.day === daysOfWeek[day]
-                            })
-                            if (habitsOfSpecialDay[0].habits.length > 0) {
-                                haveHabitDays += 1;
-                                let {
-                                    startOfDay: startTimeofDay
-                                } = convert_time_to_localtime(format(subDays(new Date(), i), 'MM/dd/yyyy'))
-
-                                if (habitsOfLastSevenDays.length > 0) {
-                                    let habitsRecordOfSpecialDay = habitsOfLastSevenDays.filter(item => {
-                                        return isSameDay(item.createDate, startTimeofDay)
-                                    })
-
-                                    if (habitsRecordOfSpecialDay.length > 0) {
-                                        let completedHabit = habitsRecordOfSpecialDay[0].habits.filter(item => {
-                                            return item.status == true
-                                        })
-
-                                        completedHabitPercent = completedHabit.length / (habitsRecordOfSpecialDay[0].habits.length)
-
-                                    } else {
-                                        completedHabitPercent = 0
-                                    }
-
-                                }
-                            }
-                            totalCompletedPercent += completedHabitPercent;
-                        }
-                    }
-
-                } else {
-                    for (let i = 1; i <= 7; i++) {
-                        let completedHabitPercent = 0;
-                        let day = getDay(subDays(new Date(), i))
-                        habitsOfSpecialDay = weekHabitlist.filter(item => {
-                            return item.day === daysOfWeek[day]
-                        })
-                        if (habitsOfSpecialDay[0].habits.length > 0) {
-                            haveHabitDays += 1;
-                            let {
-                                startOfDay: startTimeofDay
-                            } = convert_time_to_localtime(format(subDays(new Date(), i), 'MM/dd/yyyy'))
-                            if (habitsOfLastSevenDays.length > 0) {
-                                let habitsRecordOfSpecialDay = habitsOfLastSevenDays.filter(item => {
-                                    return isSameDay(item.createDate, startTimeofDay)
-                                })
-                                if (habitsRecordOfSpecialDay.length > 0) {
-                                    let completedHabit = habitsRecordOfSpecialDay[0].habits.filter(item => {
-                                        return item.status == true
-                                    })
-
-                                    completedHabitPercent = completedHabit.length / (habitsRecordOfSpecialDay[0].habits.length)
-
-                                } else {
-                                    completedHabitPercent = 0
-                                }
-
-                            }
-                        }
-                        totalCompletedPercent += completedHabitPercent;
-                    }
-                }
-
-                if (haveHabitDays >= 1) {
-                    averageCompletedPercent = (totalCompletedPercent / haveHabitDays).toFixed(1)
-                } else {
-                    averageCompletedPercent = 0
-                }
-
+            if (memberRecord) { //judge coachee is member or not
                 //get remaining days of member 
-
                 remainingDaysOfMembership = differenceInCalendarDays(memberRecord.expireAt, new Date())
             } else {
-                averageCompletedPercent = 0;
                 remainingDaysOfMembership = 0
             }
-            let coacheeImgData = ''
-            coachee.imgData ? coacheeImgData = Buffer.from(coachee.imgData).toString('base64') : coacheeImgData = ""
             let convertedCoachee = {
                 _id: coachee._id,
                 email: coachee.email,
                 name: coachee.firstName + coachee.lastName,
-                imgData: coacheeImgData,
-                imgType: coachee.imgType,
-                averageCompletedPercent,
+                posterUrl: coachee.posterUrl,
                 remainingDaysOfMembership,
                 changedWeight,
                 unreadPostItems,
@@ -341,21 +222,14 @@ let get_coachee = async (req, res) => {
     let {
         coacheeId: _id
     } = req.params
-    let coacheeImgData = '';
-    let coachee = await Coachee.findById(_id)
-
+    let coachee = await Coachee
+        .findById(_id)
+        .populate({
+            path: 'goal',
+            select: 'name'
+        })
     if (!coachee) throw Error('can not find coachee')
-    let deserializationCoachee = JSON.parse(JSON.stringify(coachee))
-    let {
-        imgData,
-        ...theRestOfPropertiesCoachee
-    } = deserializationCoachee
-
-    imgData ? coacheeImgData = Buffer.from(imgData).toString('base64') : coacheeImgData = ""
-    let currentUser = {
-        imgData: coacheeImgData,
-        ...theRestOfPropertiesCoachee
-    }
+    let currentUser = JSON.parse(JSON.stringify(coachee))
     res.status(200).json({
         coachee: currentUser
     })
@@ -365,7 +239,7 @@ let get_coachee = async (req, res) => {
  * @param {*} req 
  * @param {*} res 
  */
-let get_coach = async (req, res) => {
+let getCoachById = async (req, res) => {
     let coach = {}
     let {
         coachId: _id
@@ -377,19 +251,7 @@ let get_coach = async (req, res) => {
         })
     if (!coach) throw Error('can not find')
     //prevent theRestOfPropertiesCoach passing parent class of coach object
-    let deserializationCoach = JSON.parse(JSON.stringify(coach))
-    let {
-        imgData,
-        ...theRestOfPropertiesCoach
-    } = deserializationCoach
-    let coachImgData = ""
-    if (imgData) {
-        coachImgData = Buffer.from(imgData).toString('base64')
-    }
-    currentCoach = {
-        imgData: coachImgData,
-        ...theRestOfPropertiesCoach
-    }
+    let currentCoach = JSON.parse(JSON.stringify(coach))
     res.status(200).json({
         coach: currentCoach
     })
@@ -452,11 +314,19 @@ let get_coaches_pagination = async (req, res) => {
     let pageNumber = parseInt(queryParams.pageNumber) || 0
     let coaches = [];
     try {
-        coaches = await CommonCoach
+        coaches = await Coach
             .find({
-                email: {
-                    $regex: filter
-                }
+                $and: [{
+                        userType: {
+                            $nin: ['AdminCoach']
+                        }
+                    },
+                    {
+                        email: {
+                            $regex: filter
+                        }
+                    }
+                ]
             })
             .sort({
                 'createdAt': numSort
@@ -480,8 +350,10 @@ let get_coach_total_numbers = async (req, res) => {
 
     let numCoaches = 0
     try {
-        let Coaches = await CommonCoach.find({
-            userType: 'CommonCoach'
+        let Coaches = await Coach.find({
+            userType: {
+                $nin: ['AdminCoach']
+            }
         })
         numCoaches = Coaches.length
     } catch (error) {
@@ -498,42 +370,63 @@ let get_coach_total_numbers = async (req, res) => {
  * @param {*} req 
  * @param {*} res 
  */
-let update_coach = async (req, res) => {
+let updateCoach = async (req, res) => {
     let {
         coachId: _id
-    } = req.params
-    let coach = {}
-    let {
-        imgData,
+    } = req.params;
+    let changedProperties = {};
+    const {
+        userType,
         ...otherProperties
-    } = req.body
-    if (otherProperties.hasOwnProperty('status')) {
-        let coachee = await Coachee.findOne({
-            _coach: _id
-        })
-        if (coachee) throw Error('please transfer coachees under this coach')
-    }
-    let bufferImgData = null
-    if (imgData) {
-        bufferImgData = Buffer.from(imgData, 'base64')
-    }
-    coach = await CommonCoach.findByIdAndUpdate(_id, {
-        $set: {
-            imgData: bufferImgData,
+    } = req.body;
+    let coach = await Models[userType].findById(_id);
+    if (!coach) throw new Error('can not find')
+    const posterFile = req.files['poster'] ? req.files['poster'][0] : null;
+    if (posterFile !== null) {
+        const newPoster = await uploadPhoto(uploadOptions, posterFile);
+        if (typeof (coach.posterUrl) !== 'undefined') {
+            await deleteFile(uploadOptions.bucketName, getGCPName(coach.posterUrl));
+        }
+        changedProperties = {
+            ...newPoster,
             ...otherProperties
+        }
+    } else {
+        changedProperties = otherProperties
+    }
+    await Models[userType].findByIdAndUpdate(
+        _id, {
+            $set: {
+                ...changedProperties
+            }
+        }
+    )
+    res.status(200).json({
+        message: "updated successfully"
+    })
+}
+
+/**
+ * get kinds of coaches
+ */
+let getKinds = async (req, res) => {
+    let userTypes = Object.keys(Models.Coach.discriminators).filter(userType => {
+        if (!['AdminCoach'].includes(userType)) {
+            return true
         }
     })
     res.status(200).json({
-        message: "updated successfully"
+        userTypes: userTypes
     })
 }
 module.exports = {
     signup,
     get_coachees_pagination,
     get_coachee,
-    get_coach,
+    getCoachById,
     get_enrolled_and_expired_members,
     get_coaches_pagination,
     get_coach_total_numbers,
-    update_coach
+    updateCoach,
+    getKinds
 }

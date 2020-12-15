@@ -1,12 +1,10 @@
 const {
     Coachee,
     Coach,
-    HabitCategory,
-    Habit,
-    MemberRecord,
     CompanyCode,
     IndicatorRecord,
-    Indicator
+    Indicator,
+    MemberRecord
 } = require('../models');
 const _h = require('../helpers');
 const _ = require('lodash');
@@ -24,7 +22,6 @@ const {
  */
 
 let signup = async (req, res) => {
-
     let {
         email,
         firstName,
@@ -33,39 +30,27 @@ let signup = async (req, res) => {
         ...otherProperties
     } = req.body
     let code = companyCode || 'individual'
-    let group = ""
+    let group = "";
+    let companyInfo = await CompanyCode.findOne({
+        code
+    });
+    if (!companyInfo) throw new UserFacingError('company code does not exist');
     let coacheePromise = Coachee.findOne({
         email: email
     });
     let coachPromise = Coach.findOne({
         email: email
     });
-
-
-    let companyInfo = await CompanyCode.findOne({
-        code
-    });
-
-    if (!companyInfo) throw new UserFacingError('company code does not exist')
     group = companyInfo._id;
-
     let systyemCoachPromise = Coach
         .findOne({
             email: 'support@uphealth.sg'
         })
         .select('_id');
-
-    let weightIndicatorPromise = Indicator
-        .findOne({
-            name: 'Weight'
-        })
-        .select('_id');
-
-    let [coachee, coach, systyemCoach, weightIndicator] = await Promise.all([
+    let [coachee, coach, systyemCoach] = await Promise.all([
         coacheePromise,
         coachPromise,
-        systyemCoachPromise,
-        weightIndicatorPromise
+        systyemCoachPromise
     ])
 
     if (coach || coachee) throw new UserFacingError('Email already existed');
@@ -78,12 +63,19 @@ let signup = async (req, res) => {
         weight,
         ...otherProperties
     });
-    await IndicatorRecord.create({
-        _coachee: newUser._id,
-        value: weight,
-        _indicator: weightIndicator._id,
-        createDate: new Date()
-    })
+    if (parseInt(weight) > 20) {
+        let weightIndicator = await Indicator
+            .findOne({
+                name: 'Weight'
+            })
+            .select('_id');
+        await IndicatorRecord.create({
+            _coachee: newUser._id,
+            value: weight,
+            _indicator: weightIndicator._id,
+            createDate: new Date()
+        })
+    }
     if (newUser)
         _h.send_welcome_email(email, firstName);
     return res.status(200).json({
@@ -92,69 +84,7 @@ let signup = async (req, res) => {
 
 };
 
-/**
- * @function create new habit of coachee
- * @param {*} req 
- * @param {*} res 
- */
-let insert_recommended_habits = async (req, res) => {
-    let {
-        _id
-    } = req.user;
-    let randomHabits = []
-    //group habit categories by group name
-    let groupHabitCategories = await HabitCategory
-        .aggregate([{
-                $match: {
-                    isObsolete: false
-                }
-            },
-            {
-                $group: {
-                    "_id": "$group",
-                    habits: {
-                        "$addToSet": {
-                            "name": "$name",
-                            "description": "$description",
-                            "isObsolete": "$isObsolete"
-                        }
 
-
-                    }
-                }
-            }
-        ]).exec();
-
-    //recommend one random habit from each group
-
-    for (let i in groupHabitCategories) {
-
-        randomHabits.push(_.sampleSize(groupHabitCategories[i].habits));
-
-    }
-    let recommendHabitlist = _.flatten(randomHabits);
-
-    //insert recommendHabitList into day of the week
-
-    let daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    //habit list of day of week
-    let habits = recommendHabitlist.reduce((accmulator, current) => {
-        let habit = {
-            ...current,
-            _coachee: _id,
-            daysOfWeek: daysOfWeek
-        };
-        return [...accmulator, habit]
-    }, [])
-
-    let insertedHabitlist = await Habit.insertMany(habits)
-    if (!insertedHabitlist.length) throw Error('insert unsuccessfully')
-
-    res.status(200).json({
-        message: "insert successfully"
-
-    })
-}
 /**
  * find coach by id
  * @param {coachee id} req 
@@ -169,20 +99,8 @@ let get_coachee_by_coacheeId = async (req, res) => {
     if (!coachee) throw Error('can not find')
     //prevent theRestOfPropertiesCoach passing parent class of coach object
     let deserializationCoachee = JSON.parse(JSON.stringify(coachee))
-    let {
-        imgData,
-        ...theRestOfPropertiesCoachee
-    } = deserializationCoachee
-    let coacheeImgData = ""
-    if (imgData) {
-        coacheeImgData = Buffer.from(imgData).toString('base64')
-    }
-    currentCoachee = {
-        imgData: coacheeImgData,
-        ...theRestOfPropertiesCoachee
-    }
     res.status(200).json({
-        coachee: currentCoachee
+        coachee: deserializationCoachee
     })
 }
 
@@ -284,7 +202,7 @@ let get_coachees_pagination = async (req, res) => {
         if (coachees.length > 0) {
             for (coachee of coachees) {
                 let memberRecordPromise = MemberRecord.findOne({
-                    _coachee: coachee._id
+                    user: coachee._id
                 })
                 memberRecordPromises.push(memberRecordPromise)
             }
@@ -304,7 +222,7 @@ let get_coachees_pagination = async (req, res) => {
                     ...JSON.parse(JSON.stringify(current))
                 }
                 for (memberRecord of filteredMemberRecords) {
-                    if (current._id.toString() == memberRecord._coachee.toString()) {
+                    if (current._id.toString() == memberRecord.user.toString()) {
                         combinedCochee.expireAt = memberRecord.expireAt
                         combinedCochee.memberStatus = true
                     }
@@ -326,6 +244,7 @@ let get_coachees_pagination = async (req, res) => {
         })
 
     } catch (error) {
+        console.log(error)
         throw new Error('get coachees error')
     }
 }
@@ -441,22 +360,11 @@ let multiple_signup = async (req, res) => {
     /**
      * insert new coachees
      */
-    let systyemCoachPromise = Coach
+    let systyemCoach = await Coach
         .findOne({
             email: 'support@uphealth.sg'
         })
         .select('_id');
-
-    let weightIndicatorPromise = Indicator
-        .findOne({
-            name: 'Weight'
-        })
-        .select('_id');
-
-    let [systyemCoach, weightIndicator] = await Promise.all([
-        systyemCoachPromise,
-        weightIndicatorPromise
-    ])
     // assign coach
     let coacheesAssignedCoach = []
     let companyInfos = await CompanyCode.find()
@@ -467,7 +375,7 @@ let multiple_signup = async (req, res) => {
             throw new UserFacingError(`This company name\"${coachees[i].companyName}\" do not match`);
         let coachee = {
             _coach: systyemCoach._id,
-            password: coachees[i].phoneNumber.toString(),
+            password: coachees[i].firstName + 12345678,
             group: companyInfo._id,
             ...coachees[i]
         }
@@ -480,20 +388,7 @@ let multiple_signup = async (req, res) => {
         let insertCoacheePromise = Coachee.create(newCoachee)
         insertCoacheePromises.push(insertCoacheePromise)
     })
-    let insertedResults = await Promise.all(insertCoacheePromises)
-    //insert weight records
-    let weightRecords = [];
-    insertedResults.forEach(coachee => {
-        let weightRecord = {
-            _coachee: coachee._id,
-            value: coachee.weight,
-            _indicator: weightIndicator._id,
-            createDate: new Date()
-        }
-        weightRecords.push(weightRecord)
-    })
-
-    await IndicatorRecord.insertMany(weightRecords)
+    await Promise.all(insertCoacheePromises)
     //send emails
     // try {
     //     await Promise.all(_h.send_multiple_welcome_email(insertedResults))
@@ -504,7 +399,6 @@ let multiple_signup = async (req, res) => {
 }
 module.exports = {
     signup,
-    insert_recommended_habits,
     get_coachees_pagination,
     get_coachee_total_numbers,
     get_coachee_by_coacheeId,
