@@ -1,4 +1,3 @@
-'use strict';
 const {
     Schema,
     model
@@ -49,6 +48,24 @@ const coachSchema = new Schema({
         default: Date.now
     }
 }, baseOptions)
+
+
+class CoachClass {
+    get fullName() {
+        return `${this.firstName} ${this.lastName}`;
+    }
+    async comparePassword(candidatePassword) {
+        try {
+            const match = await bcrypt.compare(candidatePassword, this.password);
+            return match
+        } catch (err) {
+            throw Error(err)
+        }
+    }
+};
+
+coachSchema.loadClass(CoachClass);
+
 coachSchema.pre('save', function (next) {
     var coach = this;
     if (!coach.isModified('password')) return next(err);
@@ -62,15 +79,15 @@ coachSchema.pre('save', function (next) {
     })
 })
 
-coachSchema.methods.comparePassword = async function (candidatePassword) {
-    try {
-        const match = await bcrypt.compare(candidatePassword, this.password);
-        return match
-    } catch (err) {
-        throw Error(err)
+coachSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        // remove these props when object is serialized
+        delete password,
+        delete ret.id;
     }
-}
-
+});
 const Coach = model('Coach', coachSchema);
 
 const CommonCoach = Coach.discriminator('CommonCoach', new Schema({

@@ -4,8 +4,15 @@ const {videoService,articleService}=require('./mediaService')
 const challengeService=require('./challengeService')
 const noteService=require('./noteService')
 const indicatorService=require('./indicatorService')
-const memberService=require('./memberService')()
+const memberService=require('./memberService')();
 const gcpMediaService=require('./GcpMediaService')
+const {
+    manageCorporateAdminService,
+    manageUserService
+}=require('./corporateAdminService');
+
+const scheduledProgrammeService=require('./scheduledProgrammeService');
+const programmeRecordService=require('./programmeRecordService')
 module.exports = {
     indicatorService,
     challengeService,
@@ -14,5 +21,9 @@ module.exports = {
     articleService,
     noteService,
     memberService,
-    gcpMediaService
+    gcpMediaService,
+    manageCorporateAdminService,
+    manageUserService,
+    scheduledProgrammeService,
+    programmeRecordService
 }

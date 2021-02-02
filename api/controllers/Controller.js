@@ -1,4 +1,4 @@
-const safeAwait = require('safe-await')
+const safeAwait = require('safe-await');
 class Controller {
     constructor(service) {
         this.service = service;
@@ -14,7 +14,7 @@ class Controller {
      */
     createDocument = async (req, res) => {
         let document = {}
-        if (req.hasOwnProperty('files')) {
+        if (typeof (req.files) !== "undefined") {
             if (!req.files['video'] && req.files['poster']) {
                 let posterFile = req.files['poster'][0];
                 Object.assign(
@@ -40,7 +40,11 @@ class Controller {
             this.service
             .createDocument(document)
         )
-        if (err) throw new Error('upload wrongly')
+        
+        if (err){
+            console.log(err);
+            throw new Error('create wrongly')
+        } 
         res.status(200).json({
             newDocument: JSON.parse(JSON.stringify(newDocument))
         })

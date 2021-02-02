@@ -2,7 +2,6 @@ const {
     Schema,
     model
 } = require('mongoose')
-
 MemberRecordSchema = new Schema({
     isActivated: {
         type: Boolean,
@@ -11,7 +10,7 @@ MemberRecordSchema = new Schema({
     userModel: {
         type: String,
         required: true,
-        enum:['Coachee']
+        enum:['Coachee','CorporateAdmin']
     },
     user: {
         type: Schema.Types.ObjectId,

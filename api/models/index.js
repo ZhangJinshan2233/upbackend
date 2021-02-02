@@ -12,7 +12,6 @@ const {
     AdminCoach,
     PartnerCoach
 } = require('./coach');
-const Programme = require('./programme')
 const Indicator = require('./indicator');
 const IndicatorRecord = require('./indicatorRecord');
 const ChallengeCategory = require('./challengeCategory');
@@ -41,16 +40,16 @@ const {
     LearnArticleMainCategory
 } = require('./mediaCategory');
 const GcpMedia = require('./GcpMedia')
-const SpecialityCategory = require('./specialityCategory')
-const {
-    ScheduledProgramme,
-    CorporateScheduledProgramme
-} = require('./scheduledProgramme')
+const SpecialityCategory = require('./specialityCategory');
+const ProgrammeRecord=require('./programmeRecord')
+const ScheduledProgramme=require('./scheduledProgramme')
+const ScheduledProgrammeCategory=require('./scheduledProgrammeCategory')
 const GoalCategory = require('./goalCategory');
 const {
     Article,
     LearnArticle
-} = require('./article')
+} = require('./article');
+const CorporateAdmin=require('./corporateAdmin')
 //fix deprecation warnings
 mongoose.set('useCreateIndex', true);
 mongoose.set('useFindAndModify', false);
@@ -102,14 +101,15 @@ module.exports = {
     Video,
     StudioVideo,
     TipVideo,
-    Programme,
     GcpMedia,
+    ScheduledProgrammeCategory,
     ScheduledProgramme,
-    CorporateScheduledProgramme,
     GoalCategory,
     TipVideoMainCategory,
     LearnArticleMainCategory,
     Article,
     LearnArticle,
-    PartnerCoach
+    PartnerCoach,
+    CorporateAdmin,
+    ProgrammeRecord
 }

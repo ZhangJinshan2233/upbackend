@@ -3,7 +3,7 @@ const {
 } = require('mongoose')
 const Category = require('./category')
 const MembershipCategory = Category.discriminator('MembershipCategory', new Schema({
-    duration:{
+    duration: {
         type: Number,
         required: true,
         default: 7
@@ -12,6 +12,11 @@ const MembershipCategory = Category.discriminator('MembershipCategory', new Sche
         type: Number,
         required: true,
         default: 0
+    },
+    isIndividual: {
+        type: Boolean,
+        required: true,
+        default: false
     },
     isFree: {
         type: Boolean,

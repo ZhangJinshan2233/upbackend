@@ -20,6 +20,7 @@ const updateProcessor = {
                 }
             )
         } else {
+            console.log('_id',_id)
             return Models[kind].findByIdAndUpdate(
                 _id, {
                     $set: {
@@ -107,6 +108,9 @@ const documentCreator = {
             posterFile,
             ...otherProperties
         } = document
+        if(posterFile==='undefined'||!posterFile){
+            return this.createDocument(model, document)
+        }
         const poster = await uploadPhoto(uploadOptions, posterFile);
         Object.assign(properties, poster, otherProperties);
         return this.createDocument(model, properties)
@@ -161,7 +165,6 @@ class Service {
             filter = ''
         }
         pageNumber = parseInt(pageNumber) || 0;
-
         return Models[this.modelName]
             .find({
                 kind: {
@@ -201,7 +204,6 @@ class Service {
                 return documentCreator.createDocument(this.modelName, document)
             }
         } catch (err) {
-            console.log(err)
             throw err
         }
     }

@@ -9,7 +9,7 @@ Router
     .route('')
     .get(passport.authenticate('jwt', {
         session: false
-    }),coacheeController.get_coachees_pagination)
+    }), coacheeController.getCoachees)
 
 Router
     .route('/signup')
@@ -19,8 +19,8 @@ Router
     .route('/batchupload')
     .post(passport.authenticate('jwt', {
         session: false
-    }),coacheeController.multiple_signup)
-    
+    }), coacheeController.multiple_signup)
+
 Router
     .route('/count')
     .get(coacheeController.get_coachee_total_numbers)
@@ -29,18 +29,23 @@ Router
     .route('/assignCoach')
     .post(passport.authenticate('jwt', {
         session: false
-    }),coacheeController.assign_coach)
+    }), coacheeController.assign_coach)
 
+Router
+    .route('/assignMemberships')
+    .post(passport.authenticate('jwt', {
+        session: false
+    }), coacheeController.assignCoacheesMembership)
 Router
     .route('/assignGroup')
     .post(passport.authenticate('jwt', {
         session: false
-    }),coacheeController.assign_group)
+    }), coacheeController.assign_group)
 Router
     .route('/:coacheeId')
     .get(passport.authenticate('jwt', {
         session: false
-    }),coacheeController.get_coachee_by_coacheeId)
+    }), coacheeController.get_coachee_by_coacheeId)
 
 
 

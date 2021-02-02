@@ -6,7 +6,7 @@ const MemberTransactionSchema = new Schema({
     userModel: {
         type: String,
         required: true,
-        enum:['Coachee']
+        enum:['Coachee','CorporateAdmin']
     },
     user: {
         type: Schema.Types.ObjectId,
@@ -15,7 +15,7 @@ const MemberTransactionSchema = new Schema({
     assignerModel: {
         type: String,
         required: true,
-        enum: ['AdminCoach']
+        enum: ['AdminCoach','CorporateAdmin']
     },
     assigner: {
         type: Schema.Types.ObjectId,

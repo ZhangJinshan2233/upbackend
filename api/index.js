@@ -50,9 +50,10 @@ app.use('/api/companyCodes', routes.companyCodeRoute);
 app.use('/api/categories', routes.categoryRoute);
 app.use('/api/notes', routes.noteRoute);
 app.use('/api/videos',routes.videoRoute);
-app.use('/api/articles',routes.articleRoute)
-// app.use('/api/programmes',routes.programmeRoute);
-// app.use('/api/scheduledProgrammes',routes.scheduledProgrammeRoute);
+app.use('/api/articles',routes.articleRoute);
+app.use('/api/corporateAdmins',routes.corporateAdminRoute)
+app.use('/api/scheduledProgrammes',routes.scheduledProgrammeRoute);
+app.use('/api/programmeRecords',routes.programmeRecordRoute);
 
 // error handler for not existed api
 app.use(function (req, res, next) {
@@ -63,6 +64,7 @@ app.use(function (req, res, next) {
 
 //error handler for all kinds of error
 app.use(function (err, req, res, next) {
+    console.log(err)
     if (err.name === 'UserFacingError') {
         res.status(404)
             .json({
@@ -78,7 +80,7 @@ app.use(function (err, req, res, next) {
         console.log(err)
         res.status(500)
             .json({
-                message: "internal server error"
+                message: "Something wrongly, try again!"
             })
     }
 })

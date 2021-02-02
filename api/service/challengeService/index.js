@@ -221,40 +221,40 @@ module.exports = () => {
         let journal = [];
         let journalPosts = [];
         journal = await Models.Challenge
-        .aggregate([{
-                $match: {
-                    _id: Types.ObjectId(challengeId)
+            .aggregate([{
+                    $match: {
+                        _id: Types.ObjectId(challengeId)
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$posts"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: collectionName,
+                        localField: "posts._post",
+                        foreignField: "_id",
+                        as: "post"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$post"
+                    }
+                },
+                {
+                    $sort: {
+                        "post.createDate": -1
+                    }
+                },
+                {
+                    $skip: (skipNum)
+                }, {
+                    $limit: (recordSize)
                 }
-            },
-            {
-                $unwind: {
-                    path: "$posts"
-                }
-            },
-            {
-                $lookup: {
-                    from: collectionName,
-                    localField: "posts._post",
-                    foreignField: "_id",
-                    as: "post"
-                }
-            },
-            {
-                $unwind: {
-                    path: "$post"
-                }
-            },
-            {
-                $sort: {
-                    "post.createDate": -1
-                }
-            },
-            {
-                $skip: (skipNum)
-            }, {
-                $limit: (recordSize)
-            }
-        ]);
+            ]);
 
         if (journal.length > 0) {
             journalPosts = journal.reduce((acc, current) => {
@@ -338,11 +338,12 @@ module.exports = () => {
      * @param {*} modelName 
      */
     challengeService.ratePost = async (postId, rating, postModel) => {
-        let post = await Models[postModel].findByIdAndUpdate((postId), {
-            $set: {
-                rating
-            }
-        })
+        let post = await Models[postModel]
+            .findByIdAndUpdate((postId), {
+                $set: {
+                    rating
+                }
+            })
     }
     /**
      * 
@@ -425,11 +426,12 @@ module.exports = () => {
             createDate: new Date()
         }
         try {
-            await Models[postModel].findByIdAndUpdate(Types.ObjectId(postId), {
-                $push: {
-                    comments: newComment
-                }
-            })
+            await Models[postModel]
+                .findByIdAndUpdate(Types.ObjectId(postId), {
+                    $push: {
+                        comments: newComment
+                    }
+                })
             post = await Models[postModel]
                 .findById(Types.ObjectId(postId))
                 .select({

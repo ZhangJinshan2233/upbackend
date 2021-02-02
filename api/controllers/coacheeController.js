@@ -6,8 +6,9 @@ const {
     Indicator,
     MemberRecord
 } = require('../models');
-const _h = require('../helpers');
 const _ = require('lodash');
+const emailService = require('../service/emailService');
+const {addDays}=require('date-fns')
 const {
     Types
 } = require('mongoose')
@@ -77,7 +78,7 @@ let signup = async (req, res) => {
         })
     }
     if (newUser)
-        _h.send_welcome_email(email, firstName);
+       emailService.sendWelcomeEmail(newUser);
     return res.status(200).json({
         newUser
     })
@@ -110,7 +111,6 @@ let get_coachee_by_coacheeId = async (req, res) => {
  * @param {*} res 
  */
 let get_coachees_pagination = async (req, res) => {
-    console.log('sortField'.sortField)
     let queryParams = req.query
     let {
         sortField,
@@ -375,7 +375,7 @@ let multiple_signup = async (req, res) => {
             throw new UserFacingError(`This company name\"${coachees[i].companyName}\" do not match`);
         let coachee = {
             _coach: systyemCoach._id,
-            password: coachees[i].firstName + 12345678,
+            password: `${coachees[i].firstName}12345678`,
             group: companyInfo._id,
             ...coachees[i]
         }
@@ -389,12 +389,87 @@ let multiple_signup = async (req, res) => {
         insertCoacheePromises.push(insertCoacheePromise)
     })
     await Promise.all(insertCoacheePromises)
-    //send emails
-    // try {
-    //     await Promise.all(_h.send_multiple_welcome_email(insertedResults))
-    // } catch (err) {}
     res.json({
         message: "insert successfully"
+    })
+}
+
+
+let assignCoacheesMembership = async (req,res) => {
+    let {coachees, membershipCategory}=req.body
+    if (!coachees.length)
+        throw new Error('please selected coachee');
+    let coacheePromises = [];
+    let assignMembershipPromises = []
+    let coacheeDocuments = [];
+    for (let coachee of coachees) {
+        let coacheePromise = Coachee
+            .findById(coachee)
+            .select('membershipExpireAt')
+        coacheePromises.push(coacheePromise);
+    }
+    coacheeDocuments = await Promise.all(coacheePromises)
+    for (let coacheeDocument of coacheeDocuments) {
+        let expireDate;
+        if (coacheeDocument.membershipExpireAt > new Date()) {
+            expireDate = addDays(new Date(coacheeDocument.membershipExpireAt), membershipCategory.duration)
+        } else {
+            expireDate = addDays(new Date(), membershipCategory.duration)
+        }
+        let assignMembershipPromise = coacheeDocument.updateOne({
+            $set: {
+                membershipExpireAt: expireDate
+            }
+        }).exec();
+        assignMembershipPromises.push(assignMembershipPromise)
+    }
+    await Promise.all(assignMembershipPromises)
+
+    res.status(200).json({
+        message:"assign successfully"
+    })
+}
+/**
+ * get coachees
+ */
+getCoachees = async (req,res) => {
+    let queryParams = req.query
+    let {
+        sortField,
+        sortOrder,
+        filterValue,
+    } = queryParams;
+    let numSort = sortOrder == 'desc' ? -1 : 1
+    let pageSize = parseInt(queryParams.pageSize)
+    let pageNumber = parseInt(queryParams.pageNumber) || 0
+    let coachees = [];
+    if (!sortField) {
+        sortField = 'email'
+    }
+    //get users under corporate admin's company
+
+    coachees= await Coachee
+        .find({
+            email: {
+                $regex: filterValue
+            }
+        })
+        .sort({
+            [sortField]: numSort
+        })
+        .skip(pageSize * pageNumber)
+        .limit(pageSize)
+        .populate({
+            path: 'group',
+            select: 'companyName'
+        })
+        .populate({
+            path: '_coach',
+            select: 'email'
+        })
+        
+    res.status(200).json({
+        coachees
     })
 }
 module.exports = {
@@ -404,5 +479,7 @@ module.exports = {
     get_coachee_by_coacheeId,
     assign_coach,
     assign_group,
-    multiple_signup
+    multiple_signup,
+    getCoachees,
+    assignCoacheesMembership
 }

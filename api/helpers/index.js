@@ -5,10 +5,7 @@ const {
     addDays,
     compareAsc
 } = require('date-fns')
-const nodemailer = require('nodemailer');
 const {
-    ChatRoom,
-    Coachee,
     Habit
 } = require('../models')
 
@@ -28,124 +25,13 @@ let create_token = (user) => {
             email: user.email,
             userType: user.userType,
             firstTimeLogin: user.firstTimeLogin,
-            goal:user.goal
+            goal:user.goal,
+            isMember:user.isMember
         },
         config.jwtSecret, {
-            expiresIn: 5
+            expiresIn: 15000
         })
 }
-/**
- * 
- * @param {*} user 
- * @param {*} pass 
- */
-let create_transport = (user, pass) => {
-    let transporter = nodemailer.createTransport({
-        host: config.emailHost,
-        port: config.emailPort,
-        secure: false,
-        auth: {
-            user: process.env.MAILJET_API_KEY || user,
-            pass: process.env.MAILJET_API_SECRET || pass
-        }
-    });
-    return transporter
-}
-/**
- * 
- * @param {*} newCoachees 
- */
-let send_multiple_welcome_email = (newCoachees) => {
-    let emailContent = "Welcome to the FLOURISH community. " +
-        "You'll find no where like this where great place where" +
-        " friendships meet professional coaching so that becoming " +
-        "healthy becomes more fun and desirable. " +
-        "We can't wait for you to join us and work " +
-        "toward achieving your health goals together."
-    let subjectData = "Registration from FLOURISH";
-    let transporter = create_transport(config.welcomeEmailAuth.user, config.welcomeEmailAuth.pass)
-    let sendPromises = []
-    newCoachees.forEach(newCoachee => {
-        let htmlData =
-            "<html>Hey " + newCoachee.firstName + ",<br/><br/>" + emailContent + "<br/><br/><Table><TR ALIGN='Left'><TD></TD><TD>Cheering you on,<br>FLOURISH Welcome Team <br>T: (+65) 6743 4010<br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
-        let sendPromise = transporter.sendMail({
-            from: config.welcomeEmail,
-            to: newCoachee.email,
-            subject: subjectData,
-            html: htmlData,
-        })
-        sendPromises.push(sendPromise)
-    })
-
-    return sendPromises
-}
-/**
- * 
- * @param {*} user 
- * @param {*} pass 
- * @param {*} fromEmail 
- * @param {*} toEmail 
- * @param {*} subjectData 
- * @param {*} htmlData 
- */
-let organize_email = async (user, pass, fromEmail, toEmail, subjectData, htmlData) => {
-    let transporter = create_transport(user, pass)
-    try {
-        let info = await transporter.sendMail({
-            from: fromEmail,
-            to: toEmail,
-            subject: subjectData,
-            html: htmlData,
-        })
-    } catch (error) {
-        console.log("send unsuccessfully", toEmail)
-    }
-}
-/**
- * @function send mail
- * @param {*} toEmail 
- * @param {*} subjectData 
- * @param {*} htmlData 
- * @returns 
- */
-let send_welcome_email = (toEmail, firstName) => {
-    let emailContent = "Welcome to FLOURISH. " +
-        "You'll find no where like this where great place where" +
-        " friendships meet professional coaching so that becoming " +
-        "healthy becomes more fun and desirable. " +
-        "We can't wait for you to join us and work " +
-        "toward achieving your health goals together."
-
-    let subjectData = "Welcome to the FLOURISH";
-    let htmlData =
-        "<html>Hey " + firstName + ",<br/><br/>" + emailContent + "<br/><br/><Table><TR ALIGN='Left'><TD><a href='http://www.proage.sg/'></a></TD><TD>Cheering you on,<br>FLOURISH Welcome Team <br>T: (+65) 6743 4010<br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
-    organize_email(config.welcomeEmailAuth.user,
-        config.welcomeEmailAuth.pass,
-        config.welcomeEmail,
-        toEmail,
-        subjectData,
-        htmlData)
-};
-/**
- * 
- * @param {*} toEmail 
- * @param {*} firstName 
- * @param {*} randPassword 
- */
-let send_support_email = async (toEmail, firstName, randPassword) => {
-    let subjectData = "Reset password";
-    let htmlData =
-        "<html>Hey " + firstName +
-        ",<br/><br/> We've glad to have changed your password to " + "<p style='color:red'>" + randPassword + "</p>" +
-        " so that you're able to login and connect with your FLOURISH Community soon!<br/><br/>You may change the password again if you like in your Settings page in our app.<br/><br/><Table><TR ALIGN='Left'><TD></a></TD><TD>Cheering you on,<br>FLOURISH Welcome Team <br>T: (+65) 6743 4010<br><br><b><i>UP your health, UP your life!</b></i></TD></TR></Table><br></html>";
-    organize_email(config.supportEmailAuth.user,
-        config.supportEmailAuth.pass,
-        config.supportEmail,
-        toEmail,
-        subjectData,
-        htmlData)
-};
-
 
 /**
  * convert time to local time
@@ -302,14 +188,11 @@ let convertBufferToBase64 = (imgData) => {
     return base64ImgData
 }
 module.exports = {
-    send_welcome_email,
     create_token,
-    send_support_email,
     convert_time_to_localtime,
     errorHandler,
     membershipEndDateObject,
     get_week_habitlist,
     convertBase64ToBuffer,
-    convertBufferToBase64,
-    send_multiple_welcome_email
+    convertBufferToBase64
 }

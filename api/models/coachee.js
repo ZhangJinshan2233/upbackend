@@ -2,6 +2,9 @@ const {
     Schema,
     model
 } = require('mongoose')
+const {
+    subDays
+} = require('date-fns');
 const bcrypt = require('bcrypt')
 const coacheeSchema = new Schema({
     email: {
@@ -20,7 +23,7 @@ const coacheeSchema = new Schema({
         ref: 'Coach',
         default: null,
     },
-    group:{
+    group: {
         type: Schema.Types.ObjectId,
         ref: 'CompanyCode',
         default: null,
@@ -32,13 +35,9 @@ const coacheeSchema = new Schema({
     lastName: {
         type: String
     },
-     userType: {
+    userType: {
         type: String,
         default: "Coachee"
-    },
-    isMember:{
-        type:Boolean,
-        default:false
     },
     gender: {
         type: String,
@@ -65,7 +64,7 @@ const coacheeSchema = new Schema({
     phoneNumber: {
         type: Number
     },
-    goal:{
+    goal: {
         type: Schema.Types.ObjectId,
         ref: 'Category',
         default: null,
@@ -76,11 +75,15 @@ const coacheeSchema = new Schema({
     },
     lastTimeLogin: {
         type: Date,
+        default: new Date(subDays(new Date(),7))
+    },
+    membershipExpireAt: {
+        type: Date,
         default: Date.now
     },
-    addOns:{
+    addOns: {
         type: Array,
-        default:[]
+        default: []
     }
 }, {
     timestamps: {
@@ -88,8 +91,31 @@ const coacheeSchema = new Schema({
         updatedAt: 'updatedAt'
     }
 })
+
+class CoacheeClass {
+    get fullName() {
+        return `${this.firstName} ${this.lastName}`;
+    };
+    get isActive() {
+        return this.lastTimeLogin > subDays(new Date(), 7);
+    };
+    get isMember() {
+        return this.membershipExpireAt > new Date();
+    };
+    async comparePassword(candidatePassword) {
+        try {
+            const match = await bcrypt.compare(candidatePassword, this.password);
+            return match
+        } catch (err) {
+            throw Error(err)
+        }
+    }
+}
+
+coacheeSchema.loadClass(CoacheeClass);
+
 coacheeSchema.pre('save', function (next) {
-    var coachee = this;
+    let coachee = this;
     if (!coachee.isModified('password')) return next(err);
 
     bcrypt.genSalt(10, function (err, salt) {
@@ -102,15 +128,13 @@ coacheeSchema.pre('save', function (next) {
     })
 })
 
-coacheeSchema.methods.comparePassword = async function (candidatePassword) {
-
-    try {
-        const match = await bcrypt.compare(candidatePassword, this.password);
-        return match
-    } catch (err) {
-        throw Error(err)
+coacheeSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        // remove these props when object is serialized
+        delete password,
+        delete ret.id;
     }
-}
-
-
+});
 module.exports = model('Coachee', coacheeSchema)

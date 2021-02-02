@@ -93,12 +93,13 @@ let get_coachees_pagination = async (req, res) => {
         _id
     } = req.user;
     let skipNum = parseInt(req.query.skipNum) || 0;
-    let recordSize = 4;
+    let recordSize = 10;
     let coachees = []
     let _indicator = null
     let _indicatorPromise = Indicator.findOne({
         name: "Weight"
-    }).select('_id').exec()
+    }).select('_id')
+    .exec()
     coacheesPromise = Coachee.find({
             _coach: _id
         })
@@ -106,7 +107,8 @@ let get_coachees_pagination = async (req, res) => {
             createdAt: 1
         })
         .skip(skipNum)
-        .limit(recordSize).exec()
+        .limit(recordSize)
+        .exec()
     let convertedCoachees = []
     let indicatorObjctAndCoachees = await Promise.all([_indicatorPromise, coacheesPromise]);
     _indicator = indicatorObjctAndCoachees[0]._id;
@@ -114,30 +116,15 @@ let get_coachees_pagination = async (req, res) => {
     if (coachees.length > 0) {
         for (let coachee of coachees) {
             let unreadMessages = [];
-            let unreadPosts = []
-            let unreadPostItems = 0
             let unreadMessageItems = 0;
             let unreadMessageEarliestDate = new Date();
-            let unreadPostEarliestDate = new Date();
             let changedWeight = 0;
             let remainingDaysOfMembership = 0
             let latestWeightRecord = 0
-            let memberRecord = null
             //get unreadNotifications
             let unreadMessagesPromise = UnreadNotification.find({
                 $and: [{
                     type: "message"
-                }, {
-                    author: coachee._id
-                }, {
-                    recipient: _id
-                }]
-            }).sort({
-                createdAt: -1
-            })
-            let unreadPostsPromise = UnreadNotification.find({
-                $and: [{
-                    type: "post"
                 }, {
                     author: coachee._id
                 }, {
@@ -163,32 +150,21 @@ let get_coachees_pagination = async (req, res) => {
                     createDate: -1
                 })
 
-            let memberRecordPromise = MemberRecord.findOne({
-                _coachee: Types.ObjectId(coachee._id)
-            })
-
-            let combineData = await Promise.all([unreadMessagesPromise, unreadPostsPromise, latestWeightRecordPromise, memberRecordPromise]);
+            let combineData = await Promise.all([unreadMessagesPromise, latestWeightRecordPromise]);
             unreadMessages = combineData[0];
-            unreadPosts = combineData[1];
             latestWeightRecord = combineData[2];
-            memberRecord = combineData[3];
 
             if (unreadMessages.length > 0) {
                 unreadMessageItems = unreadMessages.length;
                 unreadMessageEarliestDate = unreadMessages[0].createdAt
             }
 
-            if (unreadPosts.length > 0) {
-                unreadPostItems = unreadPosts.length;
-                unreadPostEarliestDate = unreadPosts[0].createdAt
-            }
-
             if (latestWeightRecord) {
                 changedWeight = (latestWeightRecord.value - coachee.weight).toFixed(1)
             }
-            if (memberRecord) { //judge coachee is member or not
+            if (coachee.membershipExpireAt>new Date()) { //judge coachee is member or not
                 //get remaining days of member 
-                remainingDaysOfMembership = differenceInCalendarDays(memberRecord.expireAt, new Date())
+                remainingDaysOfMembership = differenceInCalendarDays(coachee.membershipExpireAt, new Date())
             } else {
                 remainingDaysOfMembership = 0
             }
@@ -199,8 +175,6 @@ let get_coachees_pagination = async (req, res) => {
                 posterUrl: coachee.posterUrl,
                 remainingDaysOfMembership,
                 changedWeight,
-                unreadPostItems,
-                unreadPostEarliestDate,
                 unreadMessageItems,
                 unreadMessageEarliestDate
             }

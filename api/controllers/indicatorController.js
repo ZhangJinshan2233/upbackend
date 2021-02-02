@@ -1,9 +1,3 @@
-
-
-
-
-
-
 const {
     indicatorService
 } = require('../service')

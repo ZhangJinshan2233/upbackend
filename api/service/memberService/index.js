@@ -88,6 +88,7 @@ module.exports = () => {
             assigner,
             assignerModel
         } = properties;
+        console.log(properties)
         if (!membershipCategoryId || !users.length)
             throw new Error('less information');
         let assignMemberPromises = []

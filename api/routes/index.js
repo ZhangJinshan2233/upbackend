@@ -13,9 +13,9 @@ const categoryRoute = require('./categoryRoute');
 const noteRoute=require('./noteRoute');
 const videoRoute=require('./videoRoute');
 const articleRoute=require('./articleRoute')
-const programmeRoute=require('./programmeRoute');
-const scheduledProgrammeRoute=require('./scheduledProgrammeRoute')
-
+const scheduledProgrammeRoute=require('./scheduledProgrammeRoute');
+const corporateAdminRoute=require('./corporateAdminRoute')
+const programmeRecordRoute=require('./programmeRecordRoute')
 module.exports = {
     authRoute,
     coachRoute,
@@ -31,6 +31,7 @@ module.exports = {
     noteRoute,
     videoRoute,
     articleRoute,
-    programmeRoute,
-    scheduledProgrammeRoute
+    scheduledProgrammeRoute,
+    corporateAdminRoute,
+    programmeRecordRoute
 }

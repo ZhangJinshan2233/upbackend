@@ -16,11 +16,12 @@ const {
     GCP
 } = require('../config');
 
-const uploadOptions={
-    bucketName:GCP.mediaBucket,
-    imageDestination:'profileimages'
+const uploadOptions = {
+    bucketName: GCP.mediaBucket,
+    imageDestination: 'profileimages'
 }
 const _h = require('../helpers');
+const emailService = require('../service/emailService')
 const bcrypt = require('bcrypt');
 const randToken = require('rand-token');
 const {
@@ -117,7 +118,7 @@ let forgot_password = async (req, res) => {
             password: hash
         }
     }).exec()
-    _h.send_support_email(email, currentUser.firstName, randPassword);
+    emailService.sendResetPasswordEmail(currentUser, randPassword)
     res.status(200).json({
         message: 'set random password successfully'
     })
