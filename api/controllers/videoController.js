@@ -58,7 +58,6 @@ class VideoController extends Controller {
                         mainCategory: current.mainCategory
                     },...acc]
                 }, [])
-                console.log()
                 videosOfMainCategory.sort(function(a, b) {
                     let nameA = a.mainCategory.name.toUpperCase(); // ignore upper and lowercase
                     let nameB = b.mainCategory.name.toUpperCase(); // ignore upper and lowercase
