@@ -53,11 +53,25 @@ class VideoController extends Controller {
                 }, [])
             } else {
                 videosOfMainCategory = videos.reduce((acc, current) => {
-                    return [...acc, {
+                    return [ {
                         videos: current.videos,
                         mainCategory: current.mainCategory
-                    }]
+                    },...acc]
                 }, [])
+                console.log()
+                videosOfMainCategory.sort(function(a, b) {
+                    let nameA = a.mainCategory.name.toUpperCase(); // ignore upper and lowercase
+                    let nameB = b.mainCategory.name.toUpperCase(); // ignore upper and lowercase
+                    if (nameA < nameB) {
+                      return 1;
+                    }
+                    if (nameA > nameB) {
+                      return -1;
+                    }
+                  
+                    // names must be equal
+                    return 0;
+                  })
             }
         } else {
             videosOfMainCategory = []
