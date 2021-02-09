@@ -45,7 +45,7 @@ let signup = async (req, res) => {
     group = companyInfo._id;
     let systyemCoachPromise = Coach
         .findOne({
-            email: 'support@uphealth.sg'
+            email: 'darwina.azmi@proage.sg'
         })
         .select('_id');
     let [coachee, coach, systyemCoach] = await Promise.all([

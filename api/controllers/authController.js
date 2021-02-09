@@ -233,10 +233,12 @@ let update_profile_field = async (req, res) => {
             ...newPoster
         }
     } else {
+        
         changedFields = {
             ...req.body
         }
     }
+    console.log( changedFields)
     await currentUser.updateOne({
         $set: {
             ...changedFields

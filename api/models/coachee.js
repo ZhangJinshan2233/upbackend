@@ -73,6 +73,10 @@ const coacheeSchema = new Schema({
         type: Boolean,
         default: true
     },
+    firstTimeChat: {
+        type: Boolean,
+        default: true
+    },
     lastTimeLogin: {
         type: Date,
         default: new Date(subDays(new Date(),7))

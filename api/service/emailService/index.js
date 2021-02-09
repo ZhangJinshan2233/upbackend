@@ -10,14 +10,23 @@ class EmailService {
         this.host = host;
         this.port = port;
     }
+
+    publicEmailContent =
+        "<Table><TR>Cheering you on,</TR>" +
+        "<TR><br/>The Flourish team</TR>" +
+        "<TR><br/><hr></TR>" +
+        "<TR><br/>  Flourish is your personal wellbeing app brought to you by your company’s wellness / HR team.</TR>" +
+        "<TR align='center'><br/><img src='https://storage.googleapis.com/flourish/uploadfiles/Flourish_Logo_Primary.png' margin-left='100px' height='40px' width='120px' alt='flourish logo'></TR>" +
+        "</Table>"
     resetPasswordEmailConfig = {
-        subjectData: "Reset password"
+        subjectData: "Here’s your new Flourish password "
     };
     welcomeEmailConfig = {
-        emailContent: "Welcome to FLOURISH. This is your one-stop go to service integrating your unique lifestyle <br/>" +
-            "to meet your personal wellbeing goals. Now becoming healthy can be fun and desirable.<br/>" +
-            "We can't wait for you to join us and work toward achieving your health goals together. ",
-        subjectData: "Welcome to FLOURISH!"
+        emailContent: "<p>Welcome to Flourish. This is your one-stop wellbeing app to achieve all your health" +
+            "goals with the help of " + "<b>real health professionals and accessible as and when your lifestyle allows for it.</b> " +
+            "Now becoming healthy can be fun and desirable. We can't wait for you to join our community" +
+            "and work toward achieving your health goals together.</p>",
+        subjectData: " Welcome to Flourish!"
     };
     senderEmailAuthConfig = {
         user: config.senderEmailAuth.user,
@@ -26,15 +35,10 @@ class EmailService {
     }
 
     recruitEmailConfig = {
-        emailContent: "*FLOURISH is your one-stop, personalised wellbeing app connecting you to a network of<br/> " +
-            "  multi-disciplinary health experts brought to you by your company’s wellness/HR team.  ",
-        subjectData: "Join our Flourish exclusive experiential workshops (limited slots)!"
+        subjectData: "Join our Flourish exclusive experiential workshops (limited slots)! "
     }
 
     reminderEmailConfig = {
-        emailContent: "We look forward to seeing you there so remember to " +
-            " block it in your calendars!",
-
         subjectData: "It’s happening soon – the Flourish workshop you’ve signed up for!",
     }
     createTransporter = (user, pass) => {
@@ -58,47 +62,43 @@ class EmailService {
         })
     }
 
-    sendResetPasswordEmail=async(coachee,randPassword)=>{
+    sendResetPasswordEmail = async (coachee, randPassword) => {
+        let firstName = coachee['firstName'].toUpperCase();
         let transporter = this.createTransporter(this.senderEmailAuthConfig.user, this.senderEmailAuthConfig.pass)
         let htmlData =
-            "<html>Hey " + coachee.firstName + ",<br/><br/>" +
-            "We've glad to have changed your password to " + "<p style='color:red'>" + randPassword + "</p>" +
-            " so that you're able to login and connect with your FLOURISH Community soon!<br/><br/>"+
-            "You may change the password again if you like in your Settings page in our app.<br/><br/>"+
-            "<TD>Cheering you on,<br/>The FLOURISH Team</TD>" +
-            "<br/><br/><TD><p><img src='https://storage.googleapis.com/flourish/uploadfiles/Flourish_Logo_Primary.png' height='40px' width='120px' alt='flourish logo'></p></TD><br/>" +
-            "</TR></Table></html>"
+            "<html> <p>Hey " + firstName + ", it happens, we all forget our passwords sometimes." +
+            " No worries, here’s your new password to login with:</p>" +
+            "<p style='color:red'>" + randPassword + "</p>" +
+            "<p>We look forward to seeing you back on Flourish and sharing the best in health and wellness with you! </p>" +
+            "<p>P.S. You may change the password again if you like in your Menu tab in our app. </p>" +
+            this.publicEmailContent + "</html>"
         return this.organizeEmail(transporter, this.senderEmailAuthConfig.email, coachee.email, this.resetPasswordEmailConfig.subjectData, htmlData)
     }
 
     sendWelcomeEmail = async (coachee) => {
         let transporter = this.createTransporter(this.senderEmailAuthConfig.user, this.senderEmailAuthConfig.pass)
+        let firstName = coachee['firstName'].toUpperCase()
         let htmlData =
-            "<html>Hey " + coachee.firstName + ",<br/><br/>" +
+            "<html> <p>Hey " + firstName + ",</p>" +
             this.welcomeEmailConfig.emailContent +
-            "<TD>Cheering you on,<br/>The FLOURISH Team</TD>" +
-            "<br/><br/><TD><p><img src='https://storage.googleapis.com/flourish/uploadfiles/Flourish_Logo_Primary.png' height='40px' width='120px' alt='flourish logo'></p></TD><br/>" +
-            "</TR></Table></html>"
+            this.publicEmailContent + "</html>"
         return this.organizeEmail(transporter, this.senderEmailAuthConfig.email, coachee.email, this.welcomeEmailConfig.subjectData, htmlData)
     }
 
     sendMultipleRecuritEmails = async (coachees, programme) => {
         let transporter = this.createTransporter(this.senderEmailAuthConfig.user, this.senderEmailAuthConfig.pass)
         let sendPromises = []
+        let programmeName = programme['name'][0].toUpperCase() + programme['name'].slice(1);
         let date = format(new Date(parseISO(programme.startDate)), 'dd/MM/yyyy hh:mm a');
         coachees.forEach(coachee => {
+            let firstName = coachee['firstName'].toUpperCase()
             let htmlData =
-                "<html>Hey " + coachee.firstName + ",<br/><br/>" +
-                "Did you know that the workshop, <b>" + programme.name + "</b> is coming up<br/>" +
-                " on <b>" + date + "</b>? We think you’ll like it and it’ll help you improve your <br/>" +
-                "personal goal.<br/><br/>" +
-                "Find out more information about this workshop and sign up via the Flourish app before slots <br/>" +
-                "fill up to learn how to improve your personal goal.  " +
-                "<br/><br/><Table><TR ALIGN='Left'>" +
-                "<TD>Cheering you on,<br/>The FLOURISH Team</TD>" +
-                "<br/><br/><TD><p><img src='https://storage.googleapis.com/flourish/uploadfiles/Flourish_Logo_Primary.png' height='40px' width='120px' alt='flourish logo'></p></TD><br/>" +
-                "</TR></Table><br/>" +
-                this.recruitEmailConfig.emailContent + "<br/></html>"
+                "<html> <p>Hey " + firstName + ",</p>" +
+                "<p>Here’s a workshop that we think you’ll like that might improve your personal wellbeing: </p>" +
+                "<p><b>" + programmeName + "</b></p>" +
+                "<p><b>" + date + "</b></p>" +
+                "<p>Find out more information about this workshop and sign up via the Flourish app before slots fill up.</p>" +
+                this.publicEmailContent + "</html>"
             let sendPromise = this.organizeEmail(transporter, this.senderEmailAuthConfig.email, coachee.email, this.recruitEmailConfig.subjectData, htmlData)
             sendPromises.push(sendPromise)
         })
@@ -106,9 +106,9 @@ class EmailService {
     }
 
     sendMultipleRemindersEmails = async (coachees, programme) => {
-        console.log(coachees)
         let transporter = this.createTransporter(this.senderEmailAuthConfig.user, this.senderEmailAuthConfig.pass)
         let sendPromises = [];
+        let programmeName = programme['name'][0].toUpperCase() + programme['name'].slice(1);
         let date = format(new Date(parseISO(programme.startDate)), 'dd/MM/yyyy hh:mm a');
         let venueOrLinkString = ''
         if (programme.isOnline) {
@@ -117,24 +117,22 @@ class EmailService {
                 password = programme.password
             }
             venueOrLinkString =
-                "Online Link: <b>" + programme.venueOrLink + "</b><br/>" +
-                "Password: " + password
+                "<p>Online Link: <b>" + programme.venueOrLink + "</b></p>" +
+                "<p>Password:  <b>" + password + "</b></p>"
         } else {
             venueOrLinkString =
-                "Online Link: <b>" + programme.venueOrLink + "</b>"
+                "<p>Venue:<b>" + programme.venueOrLink + "</b></p>"
         }
         coachees.forEach(coachee => {
+            let firstName = coachee['firstName'].toUpperCase()
             let htmlData =
-                "<html>Hey " + coachee.firstName + ",<br/><br/>" +
-                "We’re just a few days away from the <b>" + programme.name + "</b><br/>" +
-                " workshop coming up on <b>" + date + "</b>. We look forward to seeing you there so remember <br/>" +
-                "to block it in your calendars! <br/><br/>" +
+                "<html> <p>Hey " + firstName + ",</p>" +
+                "<p>We’re just a few days away from your upcoming workshop: </p>" +
+                "<p><b>" + programmeName + "</b></p>" +
+                "<p><b>" + date + "</b></p>" +
+                "<p>We look forward to seeing you there so remember to block it in your calendars!</p>" +
                 venueOrLinkString +
-                "<br/><br/><Table><TR ALIGN='Left'>" +
-                "<TD>Cheering you on,<br/>The FLOURISH Team</TD>" +
-                "<br/><br/><TD><p><img src='https://storage.googleapis.com/flourish/uploadfiles/Flourish_Logo_Primary.png' height='40px' width='120px' alt='flourish logo'></p></TD><br/>" +
-                "</TR></Table><br/>" +
-                this.recruitEmailConfig.emailContent + "<br/></html>"
+                this.publicEmailContent + "</html>"
             let sendPromise = this.organizeEmail(transporter, this.senderEmailAuthConfig.email, coachee.email, this.reminderEmailConfig.subjectData, htmlData)
             sendPromises.push(sendPromise)
         })
