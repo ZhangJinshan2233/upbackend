@@ -3,6 +3,9 @@ const safeAwait = require('safe-await');
 const {
     Types
 } = require('mongoose')
+const {
+    errorHandler
+} = require('../../middlewares')
 class ProgrammeRecordService {
     constructor(modelName) {
         this.model = Models[modelName];
@@ -41,6 +44,13 @@ class ProgrammeRecordService {
             _scheduledProgramme
         } = document;
 
+        let scheduledProgramme = await Models['ScheduledProgramme']
+            .findById(_scheduledProgramme)
+            .select('capacity registeredUsers')
+        let registeredUsersNums = scheduledProgramme.registeredUsers.length ? scheduledProgramme.registeredUsers.length : 0;
+        if (scheduledProgramme.capacity <= registeredUsersNums) {
+            return Promise.resolve('No slot')
+        }
         let programmeRecord = await this.model.findOne({
             $and: [{
                     _coachee: _coachee
@@ -84,8 +94,8 @@ class ProgrammeRecordService {
         return this.model
             .findById(_id)
             .populate({
-                path:"_scheduledProgramme",
-                select:'name registeredUsers isOnline password joinedUsers endDate capacity startDate description trainer  venueOrLink'
+                path: "_scheduledProgramme",
+                select: 'name registeredUsers isOnline password joinedUsers endDate capacity startDate description trainer  venueOrLink'
             })
     };
 
@@ -137,8 +147,8 @@ class ProgrammeRecordService {
             .skip(skipNum)
             .limit(pageSize)
             .populate({
-                path:"_scheduledProgramme",
-                select:'name endDate  startDate'
+                path: "_scheduledProgramme",
+                select: 'name endDate  startDate'
             })
     }
 }
