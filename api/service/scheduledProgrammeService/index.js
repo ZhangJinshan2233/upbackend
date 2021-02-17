@@ -133,7 +133,7 @@ class ScheduledProgrammeService extends Service {
             .find(query)
             .select('name registeredUsers capacity startDate')
             .sort({
-                startDate: -1
+                startDate: 1
             })
             .populate({
                 path: 'category'

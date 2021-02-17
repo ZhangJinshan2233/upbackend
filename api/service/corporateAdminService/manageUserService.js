@@ -155,7 +155,7 @@ class ManageUserService {
                             }
                         ]
                     })
-                if (admin.membersCap < currentMembers) {
+                if (admin.membersCap <= currentMembers.length) {
                     throw new errorHandler.UserFacingError('members are full')
                 } else {
                     let systyemCoach = await Models['Coach']
@@ -177,7 +177,7 @@ class ManageUserService {
         } else {
             let systyemCoach = await Models['Coach']
                 .findOne({
-                    email: 'support@uphealth.sg'
+                    email: 'darwina.azmi@proage.sg'
                 })
                 .select('_id');
             return Models['Coachee'].create({
@@ -227,7 +227,8 @@ class ManageUserService {
                                 }
                             ]
                         })
-                    if (admin.memberCap < currentMembers) {
+                        console.log(admin.membersCap);
+                    if (admin.membersCap <= currentMembers.length) {
                         throw new errorHandler.UserFacingError('members are full')
                     } else {
                         let coachee = await Models['Coachee']
@@ -321,7 +322,7 @@ class ManageUserService {
         let findAdminPromise = this.getCorporateAdminById(corporateAdminId)
         let findSystyemCoachPromise = Models['Coach']
             .findOne({
-                email: 'support@uphealth.sg'
+                email: 'darwina.azmi@proage.sg'
             })
             .select('_id');
 
@@ -358,7 +359,7 @@ class ManageUserService {
                 return coachee.isMember == true
             })
             let totalMembers = currentMembers.length + insertCoacheeMembers.length;
-            if (totalMembers > admin.membersCap) {
+            if (totalMembers >= admin.membersCap) {
                 throw new errorHandler.UserFacingError('members exceed cap')
             }
             for (let i = 0; i < coachees.length; i++) {
@@ -424,7 +425,7 @@ class ManageUserService {
                     ]
                 })
             let totalMembers = currentMembers.length + coachees.length;
-            if (totalMembers > admin.membersCap) {
+            if (totalMembers >= admin.membersCap) {
                 throw new errorHandler.UserFacingError('members exceed cap')
             } else {
                 let updateMembershipPromises = []

@@ -136,7 +136,7 @@ class ManageCorporateAdminService extends Service {
                 path: 'company',
                 select: 'companyName'
             })
-            .select('firstName lastName membersCap email company phoneNumber')
+            .select('firstName lastName membersCap email company phoneNumber membershipExpireAt')
     }
     /**
      * change password
