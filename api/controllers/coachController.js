@@ -71,7 +71,7 @@ let signup = async (req, res) => {
         let newCoach = await Models[userType].create({
             email,
             firstName,
-            password: firstName + '12345678',
+            password:'Flourish12345',
             ...remainingProperties
         })
 

@@ -146,7 +146,7 @@ class ScheduledProgrammeService extends Service {
     userGetProgrammeById = async (scheduledProgrammeId, userId) => {
         return Models[this.modelName]
             .findById(scheduledProgrammeId)
-            .select('name registeredUsers isOnline password endDate capacity startDate description trainer  venueOrLink')
+            .select('name registeredUsers isOnline personInCharge password endDate capacity startDate description trainer  venueOrLink')
             .populate({
                 path: 'category'
             })
@@ -199,6 +199,7 @@ class ScheduledProgrammeService extends Service {
             company,
             registeredUsers
         } = programme
+       
         let sendEmailUsers = [];
         let totalUsers = []
         let err
@@ -228,14 +229,15 @@ class ScheduledProgrammeService extends Service {
         if (!totalUsers.length || err) throw new errorHandler.UserFacingError('please add users')
         if (registeredUsers.length > 0) {
             sendEmailUsers = totalUsers.filter(user => {
-                return !registeredUsers.includes(user._id)
+                return !registeredUsers.includes(user._id.toString())
             })
 
         } else {
             sendEmailUsers = totalUsers
         }
         if (sendEmailUsers.length > 0) {
-            return emailService.sendMultipleRecuritEmails(sendEmailUsers, programme)
+            // return emailService.sendMultipleRecuritEmails(sendEmailUsers, programme)
+            console.log(sendEmailUsers.length)
         }
     }
 

@@ -375,7 +375,7 @@ let multiple_signup = async (req, res) => {
             throw new UserFacingError(`This company name\"${coachees[i].companyName}\" do not match`);
         let coachee = {
             _coach: systyemCoach._id,
-            password: `${coachees[i].firstName}12345678`,
+            password: 'Flourish12345',
             group: companyInfo._id,
             ...coachees[i]
         }

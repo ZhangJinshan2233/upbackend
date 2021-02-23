@@ -167,7 +167,7 @@ class ManageUserService {
                         group: admin.company,
                         _coach: systyemCoach._id,
                         firstName,
-                        password: `${firstName}12345678`,
+                        password: 'Flourish12345',
                         membershipExpireAt: admin.membershipExpireAt,
                         ...otherUserProperties
                     })
@@ -184,7 +184,7 @@ class ManageUserService {
                 group: admin.company,
                 firstName,
                 _coach: systyemCoach._id,
-                password: `${firstName}12345678`,
+                password: 'Flourish12345',
                 ...otherUserProperties
             })
         }
@@ -335,7 +335,7 @@ class ManageUserService {
             for (let i = 0; i < coachees.length; i++) {
                 let coachee = {
                     _coach: systyemCoach._id,
-                    password: `${coachees[i].firstName}12345678`,
+                    password: 'Flourish12345',
                     group: admin.company,
                     membershipExpireAt: new Date(),
                     ...coachees[i]
@@ -367,7 +367,7 @@ class ManageUserService {
                 if (coachees[i].isMember) {
                     coachee = {
                         _coach: systyemCoach._id,
-                        password: `${coachees[i].firstName}12345678`,
+                        password: 'Flourish12345',
                         group: admin.company,
                         membershipExpireAt: admin.membershipExpireAt,
                         ...coachees[i]
@@ -375,7 +375,7 @@ class ManageUserService {
                 } else {
                     coachee = {
                         _coach: systyemCoach._id,
-                        password: `${coachees[i].firstName}12345678`,
+                        password: 'Flourish12345',
                         group: admin.company,
                         membershipExpireAt: new Date(),
                         ...coachees[i]

@@ -222,11 +222,12 @@ class ScheduledProgrammeController {
       this.service.userGetProgrammes(req.query, req.user._id)
     )
     if (err) throw err;
+    
     let newDocuments = []
     if (documents.length > 0) {
       newDocuments = documents.reduce((acc, current) => {
         let isRegistered = false
-        if (current.registeredUsers.includes(req.user._id)) {
+        if (current.registeredUsers.includes(req.user._id.toString())) {
           isRegistered = true
         }
         let newDocument = {
@@ -234,7 +235,7 @@ class ScheduledProgrammeController {
           ...JSON.parse(JSON.stringify(current))
         }
 
-        return [newDocument, ...acc]
+        return [...acc,newDocument]
       }, [])
     }
     return res.status(200).json({

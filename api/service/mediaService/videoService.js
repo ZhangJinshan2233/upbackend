@@ -185,6 +185,14 @@ class VideoService extends Service {
                     createdAt: -1
                 }
             },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'subCategory',
+                    foreignField: '_id',
+                    as: 'subCategory'
+                }
+            },
             // {
             //     $project: { //select fields
             //         posterUrl: 1,
