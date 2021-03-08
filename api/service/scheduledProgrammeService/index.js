@@ -236,8 +236,7 @@ class ScheduledProgrammeService extends Service {
             sendEmailUsers = totalUsers
         }
         if (sendEmailUsers.length > 0) {
-            // return emailService.sendMultipleRecuritEmails(sendEmailUsers, programme)
-            console.log(sendEmailUsers.length)
+            return emailService.sendMultipleRecuritEmails(sendEmailUsers, programme)
         }
     }
 
