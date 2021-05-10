@@ -19,7 +19,7 @@
     "get-video-duration": "^3.0.0",
     "into-stream": "^6.0.0",
     "jsonwebtoken": "^8.5.1",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "mime-types": "^2.1.27",
     "mongoose": "^5.9.20",
     "mongoose-autopopulate": "^0.12.2",
